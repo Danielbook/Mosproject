@@ -1,4 +1,4 @@
-var container, stats;
+var container, stat, clock;
 
 var camera, scene, controls, renderer;
 
@@ -8,15 +8,20 @@ init();
 animate();
 
 function init() {
-    
+
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 );
     camera.position.z = 5;
     camera.position.y = 3;
 
     scene = new THREE.Scene();
+    clock = new THREE.Clock();
 
-    controls = new THREE.OrbitControls( camera );
-    controls.damping = 0.2;
+    controls = new THREE.FlyControls( camera );
+		controls.movementSpeed = 10;
+		controls.domElement = container;
+		controls.rollSpeed = Math.PI / 24;
+		controls.autoForward = false;
+		controls.dragToLook = false;
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -60,8 +65,6 @@ function onWindowResize() {
 function animate() {
         requestAnimationFrame( animate );
 
-        controls.update();
-
         render();
 }
 
@@ -69,5 +72,8 @@ function animate() {
 * RENDERER
 */
 function render() {
-   renderer.render( scene, camera );
+        var delta = clock.getDelta();
+
+        controls.update( delta );
+        renderer.render( scene, camera );
 }
