@@ -43,7 +43,6 @@ function init() {
     ico.position.z = -10;
 
     camera.position.z = 5;
-
     window.addEventListener( 'resize', onWindowResize, false );
 }
 
@@ -56,7 +55,6 @@ function onWindowResize() {
         camera.updateProjectionMatrix();
 
         renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 /**
