@@ -19,6 +19,9 @@ function init() {
 
     scene = new THREE.Scene();
 
+    scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
+    scene.fog.color.setHSL( 0.6, 0, 1 );
+
     controls = new THREE.TrackballControls( camera );
 		controls.rotateSpeed = 1.0;
 		controls.zoomSpeed = 1.2;
