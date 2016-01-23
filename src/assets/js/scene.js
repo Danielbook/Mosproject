@@ -94,7 +94,7 @@ function init() {
     scene.add( sky );
 
 
-    geometry = new THREE.IcosahedronGeometry( 1, 1 );
+    geometry = new THREE.IcosahedronGeometry( 15, 1 );
     var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading } );
     icoMesh = new THREE.Mesh( geometry, material );
 
@@ -117,7 +117,6 @@ function init() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
-    camera.position.z = 5;
     window.addEventListener( 'resize', onWindowResize, false );
 }
 
