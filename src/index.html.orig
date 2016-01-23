@@ -8,7 +8,12 @@
 	<title>Sand</title>
 	<!-- three.js -->
 	<script src="assets/js/three.min.js"></script>
+<<<<<<< HEAD
+	<script src="assets/js/FlyControls.js"></script>
+=======
 	<script src="assets/js/TrackballControls.js"></script>
+
+>>>>>>> 6421924b93709febc67faeab6d2a0ffe65dc3f21
 
 	<!-- Bootstrap -->
 	<link href="assets/css/bootstrap.min.css" rel="stylesheet">
