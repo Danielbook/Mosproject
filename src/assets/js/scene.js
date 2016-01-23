@@ -8,6 +8,9 @@ var icoMesh;
 
 var clock = new THREE.Clock();
 
+Physijs.scripts.worker = 'assets/js/physics/physijs_worker.js';
+Physijs.scripts.ammo = 'ammo.js';
+
 init();
 animate();
 
@@ -17,7 +20,7 @@ function init() {
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
     camera.position.set( 0, 0, 250 );
 
-    scene = new THREE.Scene();
+    scene = new Physijs.Scene();
 
     scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
     scene.fog.color.setHSL( 0.6, 0, 1 );
@@ -67,7 +70,7 @@ function init() {
     var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
     groundMat.color.setHSL( 0.095, 1, 0.75 );
 
-    var ground = new THREE.Mesh( groundGeo, groundMat );
+    var ground = new Physijs.BoxMesh( groundGeo, groundMat, 0 ); // Last argument is mass
     ground.rotation.x = -Math.PI/2;
     ground.position.y = -33;
     scene.add( ground );
@@ -96,7 +99,7 @@ function init() {
 
     geometry = new THREE.IcosahedronGeometry( 15, 1 );
     var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading } );
-    icoMesh = new THREE.Mesh( geometry, material );
+    icoMesh = new Physijs.SphereMesh( geometry, material );
 
     icoMesh.position.set(0,0,-10);
 
@@ -133,8 +136,6 @@ function onWindowResize() {
 function animate() {
         requestAnimationFrame( animate );
 
-        icoMesh.rotation.y += 0.01;
-        icoMesh.rotation.x += 0.01;
 
         render();
 }
@@ -144,6 +145,8 @@ function animate() {
 */
 function render() {
         var delta = clock.getDelta();
+
+        scene.simulate(); // run physics
 
         controls.update( delta );
         

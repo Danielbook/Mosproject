@@ -6,40 +6,30 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 	<title>Sand</title>
+	<!-- CSS -->
+	<link rel="stylesheet" type="text/css" media="screen" href="assets/css/style.css">
 	<!-- three.js -->
 	<script src="assets/js/three.min.js"></script>
+	<!-- phisi.js -->
+	<script type="text/javascript" src="assets/js/physics/physi.js"></script>
+	<!-- trackballcontrols -->
 	<script src="assets/js/TrackballControls.js"></script>
-
-	<!-- Bootstrap -->
-	<link href="assets/css/bootstrap.min.css" rel="stylesheet">
-	<link href="assets/css/style.css" rel="stylesheet">
 </head>
 <body>
-	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-	<!-- Include all compiled plugins (below), or include individual files as needed -->
-	<script src="assets/js/bootstrap.min.js"></script>
-
 	<div id="container"></div>
 
 	<!-- SHADERS -->
 	<script type="x-shader/x-vertex" id="vertexShader">
-
 		varying vec3 vWorldPosition;
-
 		void main() {
-
 			vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
 			vWorldPosition = worldPosition.xyz;
 
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
 		}
-
 	</script>
 
 	<script type="x-shader/x-fragment" id="fragmentShader">
-
 		uniform vec3 topColor;
 		uniform vec3 bottomColor;
 		uniform float offset;
@@ -48,16 +38,10 @@
 		varying vec3 vWorldPosition;
 
 		void main() {
-
 			float h = normalize( vWorldPosition + offset ).y;
 			gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
-
 		}
-
 	</script>
-
-
 	<script src="assets/js/scene.js"></script>
-
 </body>
 </html>
