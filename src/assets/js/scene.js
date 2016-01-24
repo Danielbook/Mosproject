@@ -96,7 +96,7 @@ function init() {
     var sky = new THREE.Mesh( skyGeo, skyMat );
     scene.add( sky );
 
-
+    //SHAPE
     geometry = new THREE.IcosahedronGeometry( 15, 1 );
     var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading } );
     icoMesh = new Physijs.SphereMesh( geometry, material );
