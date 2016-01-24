@@ -4,7 +4,12 @@ var camera, scene, controls, renderer, dirLight, hemiLight;
 
 var group;
 
+var objects = [];
+
 var icoMesh;
+
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2(), offset = new THREE.Vector3(), INTERSECTED, SELECTED;
 
 var clock = new THREE.Clock();
 
@@ -18,7 +23,7 @@ function init() {
     container = document.getElementById( 'container' );
 
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-    camera.position.set( 0, 0, 250 );
+    camera.position.set( 0, 0, 10 );
 
     scene = new Physijs.Scene();
 
@@ -26,13 +31,13 @@ function init() {
     scene.fog.color.setHSL( 0.6, 0, 1 );
 
     controls = new THREE.TrackballControls( camera );
-		controls.rotateSpeed = 1.0;
-		controls.zoomSpeed = 1.2;
-		controls.panSpeed = 0.8;
-		controls.noZoom = false;
-		controls.noPan = false;
-		controls.staticMoving = true;
-		controls.dynamicDampingFactor = 0.3;
+	controls.rotateSpeed = 1.0;
+	controls.zoomSpeed = 1.2;
+	controls.panSpeed = 0.8;
+	controls.noZoom = false;
+	controls.noPan = false;
+	controls.staticMoving = true;
+	controls.dynamicDampingFactor = 0.3;
 
     // LIGHTS
     hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
@@ -72,7 +77,7 @@ function init() {
 
     var ground = new Physijs.BoxMesh( groundGeo, groundMat, 0 ); // Last argument is mass
     ground.rotation.x = -Math.PI/2;
-    ground.position.y = -33;
+    ground.position.y = -2;
     scene.add( ground );
 
     ground.receiveShadow = true;
@@ -97,15 +102,24 @@ function init() {
     scene.add( sky );
 
     //SHAPE
-    geometry = new THREE.IcosahedronGeometry( 15, 1 );
+    geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
     var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading } );
-    icoMesh = new Physijs.SphereMesh( geometry, material );
 
-    icoMesh.position.set(0,0,-10);
+    for(var i = 0; i < 50; i++){
 
-    icoMesh.castShadow = true;
-    icoMesh.receiveShadow = true;
-    scene.add( icoMesh );
+        icoMesh = new Physijs.SphereMesh( geometry, material, 0.1 );
+
+        icoMesh.position.set(0,i,-10);
+
+        icoMesh.castShadow = true;
+        icoMesh.receiveShadow = true;
+
+        scene.add( icoMesh );
+
+        objects.push( icoMesh ); 
+    }
+
+    
 
     // RENDERER
     renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -121,6 +135,9 @@ function init() {
     renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
     window.addEventListener( 'resize', onWindowResize, false );
+    renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
 }
 
 function onWindowResize() {
@@ -136,7 +153,6 @@ function onWindowResize() {
 function animate() {
         requestAnimationFrame( animate );
 
-
         render();
 }
 
@@ -151,4 +167,98 @@ function render() {
         controls.update( delta );
         
         renderer.render( scene, camera );
+}
+
+function onDocumentMouseMove( event ) {
+    event.preventDefault();
+
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    //
+
+    raycaster.setFromCamera( mouse, camera );
+
+    if ( SELECTED ) {
+        var intersects = raycaster.intersectObject( plane );
+
+        if ( intersects.length > 0 ) {
+
+            SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+        }
+        return;
+    }
+    var intersects = raycaster.intersectObjects( objects );
+
+    if ( intersects.length > 0 ) {
+
+        if ( INTERSECTED != intersects[ 0 ].object ) {
+
+            if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+            INTERSECTED = intersects[ 0 ].object;
+            INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+            plane.position.copy( INTERSECTED.position );
+            plane.lookAt( camera.position );
+
+        }
+
+        container.style.cursor = 'pointer';
+
+    } else {
+
+        if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+        INTERSECTED = null;
+
+        container.style.cursor = 'auto';
+
+    }
+
+}
+
+function onDocumentMouseDown( event ) {
+
+    event.preventDefault();
+
+    raycaster.setFromCamera( mouse, camera );
+
+    var intersects = raycaster.intersectObjects( objects );
+
+    if ( intersects.length > 0 ) {
+
+        controls.enabled = false;
+
+        SELECTED = intersects[ 0 ].object;
+
+        var intersects = raycaster.intersectObject( plane );
+
+        if ( intersects.length > 0 ) {
+
+            offset.copy( intersects[ 0 ].point ).sub( plane.position );
+
+        }
+
+        container.style.cursor = 'move';
+
+    }
+
+}
+
+function onDocumentMouseUp( event ) {
+
+    event.preventDefault();
+
+    controls.enabled = true;
+
+    if ( INTERSECTED ) {
+
+        plane.position.copy( INTERSECTED.position );
+
+        SELECTED = null;
+
+    }
+
+    container.style.cursor = 'auto';
+
 }
