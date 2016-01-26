@@ -99,18 +99,22 @@ function init() {
 	var sky = new THREE.Mesh( skyGeo, skyMat );
 	scene.add( sky );
 	//Sand
-	geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
-	var sandFri = 0.2;
-	var sandRes = 0.1;
+	geometry = new THREE.BoxGeometry( 1, 1, 1 );
+	var sandFri = 0.4;
+	var sandRes = 0.9;
 	var material = Physijs.createMaterial(
 	//new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading }),
 	new THREE.MeshBasicMaterial( { color:0xBC211F } ),
 	sandFri,
 	sandRes
 	);
-	for(var i = 1; i < 10; i += 0.1){
-		sandMesh = new Physijs.BoxMesh( geometry, material, 0.01 );
-		sandMesh.position.set(Math.random()*4-2,2+Math.random()*10,Math.random()*4-2);
+	//particles = new THREE.Points( geometry, materials[i] );
+	for(var i = 1; i < 100; i += 0.1){
+		sandMesh = new THREE.Points( geometry, material );
+		sandMesh.position.set(Math.random()*4-2,Math.random(),Math.random()*4-2);
+		sandMesh.rotation.x = Math.random();
+		sandMesh.rotation.y = Math.random();
+		sandMesh.rotation.z = Math.random();
 		//sandMesh.castShadow = true;
 		//sandMesh.receiveShadow = true;
 		scene.add( sandMesh );
