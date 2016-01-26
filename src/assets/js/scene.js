@@ -6,7 +6,7 @@ var group;
 
 var objects = [];
 
-var icoMesh;
+var sandMesh;
 
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(), INTERSECTED, SELECTED;
@@ -23,7 +23,7 @@ function init() {
     container = document.getElementById( 'container' );
 
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-    camera.position.set( 0, 0, 10 );
+    camera.position.set( 0, 1.8, 10 );
 
     scene = new Physijs.Scene();
 
@@ -77,10 +77,42 @@ function init() {
 
     var ground = new Physijs.BoxMesh( groundGeo, groundMat, 0 ); // Last argument is mass
     ground.rotation.x = -Math.PI/2;
-    ground.position.y = -2;
+    ground.position.y = 0;
     scene.add( ground );
 
     ground.receiveShadow = true;
+
+    //Box to contain the sand
+    var boxFric = 0.5; // friction
+    var boxRes = 0.8; // restitution ( bounciness ) 
+    var geometry = new THREE.BoxGeometry( 4.7, 0.5, 0.5 );
+    var material = Physijs.createMaterial(
+        new THREE.MeshBasicMaterial( {color: 0x00ff00} ), 
+        boxFric, 
+        boxRes 
+    );
+    var cube = new Physijs.BoxMesh( geometry, material);
+    cube.position.set(0,0.5,-2.51);
+
+    scene.add( cube );
+
+    cube = cube.clone();
+
+    cube.position.set(0,0.5,2.51);
+
+    scene.add( cube );
+
+    cube = cube.clone();
+
+    cube.position.set(2.52,0.5,0);
+    cube.rotation.y = 1.57079633;
+
+    scene.add(cube);
+
+    cube = cube.clone();
+    cube.position.set(-2.52,0.5,0);
+
+    scene.add(cube);
 
     // SKYDOME
     var vertexShader = document.getElementById( 'vertexShader' ).textContent;
@@ -103,23 +135,27 @@ function init() {
 
     //SHAPE
     geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
-    var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading } );
+    var sandFri = 0.2;
+    var sandRes = 0.8;
+    var material = Physijs.createMaterial(
+    //new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading }),
+    new THREE.MeshBasicMaterial( { color:0xBC211F } ),
+    sandFri,
+    sandRes
+    );
 
-    for(var i = 0; i < 50; i++){
+    for(var i = 1; i < 50; i += 0.1){
+        sandMesh = new Physijs.BoxMesh( geometry, material, 0.01 );
 
-        icoMesh = new Physijs.SphereMesh( geometry, material, 0.1 );
+        sandMesh.position.set(0,i,0);
 
-        icoMesh.position.set(0,i,-10);
+        //sandMesh.castShadow = true;
+        //sandMesh.receiveShadow = true;
 
-        icoMesh.castShadow = true;
-        icoMesh.receiveShadow = true;
+        scene.add( sandMesh );
 
-        scene.add( icoMesh );
-
-        objects.push( icoMesh ); 
+        objects.push( sandMesh ); 
     }
-
-    
 
     // RENDERER
     renderer = new THREE.WebGLRenderer( { antialias: true } );
