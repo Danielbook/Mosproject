@@ -11,6 +11,11 @@ Physijs.scripts.ammo = 'ammo.js';
 init();
 animate();
 function init() {
+	//Setup GUI
+	var gui = new DAT.GUI({ height: 3*32-1});
+	var blocks = {blocks: 50};
+	gui.add(blocks, 'blocks');
+
 	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
