@@ -11,12 +11,15 @@ Physijs.scripts.ammo = 'ammo.js';
 init();
 animate();
 function init() {
+	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
 	camera.position.set( 0, 1.8, 10 );
+	//Setup the scene
 	scene = new Physijs.Scene();
 	scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
 	scene.fog.color.setHSL( 0.6, 0, 1 );
+	//Setup controls
 	controls = new THREE.TrackballControls( camera );
 	controls.rotateSpeed = 1.0;
 	controls.zoomSpeed = 1.2;
@@ -49,10 +52,10 @@ function init() {
 	dirLight.shadowBias = -0.0001;
 	//dirLight.shadowCameraVisible = true;
 	// GROUND
-	var groundGeo = new THREE.PlaneBufferGeometry( 10000, 10000 );
+	var groundGeo = new THREE.BoxGeometry( 10000, 10000, 0.2 );
 	var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
 	groundMat.color.setHSL( 0.095, 1, 0.75 );
-	var ground = new Physijs.BoxMesh( groundGeo, groundMat, 0 ); // Last argument is mass
+	var ground = new Physijs.BoxMesh( groundGeo, groundMat, 0	); // Last argument is mass
 	ground.rotation.x = -Math.PI/2;
 	ground.position.y = 0;
 	scene.add( ground );
@@ -75,10 +78,10 @@ function init() {
 	cube = cube.clone();
 	cube.position.set(2.52,0.5,0);
 	cube.rotation.y = 1.57079633;
-	scene.add(cube);
+	scene.add( cube );
 	cube = cube.clone();
 	cube.position.set(-2.52,0.5,0);
-	scene.add(cube);
+	scene.add( cube );
 	// SKYDOME
 	var vertexShader = document.getElementById( 'vertexShader' ).textContent;
 	var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
@@ -94,7 +97,7 @@ function init() {
 	var skyMat = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: fragmentShader, uniforms: uniforms, side: THREE.BackSide } );
 	var sky = new THREE.Mesh( skyGeo, skyMat );
 	scene.add( sky );
-	//SHAPE
+	//Sand
 	geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
 	var sandFri = 0.2;
 	var sandRes = 0.8;
