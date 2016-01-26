@@ -100,40 +100,39 @@ function init() {
 	var sky = new THREE.Mesh( skyGeo, skyMat );
 	scene.add( sky );
 	//Sand
-	// geometry = new THREE.BoxGeometry( 1, 1, 1 );
-	// var sandFri = 0.4;
-	// var sandRes = 0.9;
-	// var material = Physijs.createMaterial(
-	// //new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading }),
-	// new THREE.MeshBasicMaterial( { color:0xBC211F } ),
-	// sandFri,
-	// sandRes
-	// );
-	// material = new THREE.PointsMaterial( { color:0xE0C319, size: 0.08 } );
-	// //particles = new THREE.Points( geometry, materials[i] );
-	// for(var i = 1; i < 1000; i++){
-	// 	sandMesh = new THREE.Points( geometry, material );
-	// 	sandMesh.position.set(Math.random()*0.01,Math.random()*0.2+1,Math.random()*0.01);
-	// 	sandMesh.rotation.x = Math.random();
-	// 	sandMesh.rotation.y = Math.random();
-	// 	sandMesh.rotation.z = Math.random();
-	// 	//sandMesh.castShadow = true;
-	// 	//sandMesh.receiveShadow = true;
-	// 	scene.add( sandMesh );
-	// 	objects.push( sandMesh );
-	// }
+	geometry = new THREE.SphereGeometry( 0.05);
+	var sandFri = 0.9;
+	var sandRes = 0.1;
+	var material = Physijs.createMaterial(
+	//new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading }),
+	new THREE.MeshBasicMaterial( { color:0xfff0ff } ),
+	sandFri,
+	sandRes
+	);
+	//particles = new THREE.Points( geometry, materials[i] );
+	for(var idx = 1; idx < 1000; idx++){
+		sandMesh = new Physijs.SphereMesh( geometry, material );
+		sandMesh.position.set(Math.random()*4-2,0.5,Math.random()*4-2);
+		sandMesh.rotation.x = Math.random();
+		sandMesh.rotation.y = Math.random();
+		sandMesh.rotation.z = Math.random();
+		//sandMesh.castShadow = true;
+		//sandMesh.receiveShadow = true;
+		scene.add( sandMesh );
+		objects.push( sandMesh );
+	}
 
 	//Particle system
-	var particles = new THREE.Geometry;
-	for (var p = 0; p < 1000; p++) {
-	    var particle = new THREE.Vector3(Math.random()*4-2, Math.random()*3, Math.random()*4 - 2);
-	    particles.vertices.push(particle);
-	}
-	var particleTexture = THREE.ImageUtils.loadTexture('./assets/img/fu1.jpg');
-	var particleMaterial = new THREE.ParticleBasicMaterial({ map: particleTexture, transparent: true, size: 0.8 });
-	particleSystem = new THREE.ParticleSystem(particles, particleMaterial);
+	// var particles = new THREE.Geometry;
+	// for (var p = 0; p < 1000; p++) {
+	//     var particle = new THREE.Vector3(Math.random()*4-2, Math.random()*3, Math.random()*4 - 2);
+	//     particles.vertices.push(particle);
+	// }
+	// var particleTexture = THREE.ImageUtils.loadTexture('./assets/img/fu1.jpg');
+	// var particleMaterial = new THREE.ParticleBasicMaterial({ map: particleTexture, transparent: true, size: 0.8 });
+	// particleSystem = new THREE.ParticleSystem(particles, particleMaterial);
 
-	scene.add(particleSystem);
+	// scene.add(particleSystem);
 
 	// RENDERER
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -168,7 +167,7 @@ function animate() {
 function render() {
 	var delta = clock.getDelta();
 	scene.simulate(); // run physics
-	particleSystem.rotation.y += delta*0.2;
+	//particleSystem.rotation.y += delta*0.2;
 
 	controls.update( delta );
 	renderer.render( scene, camera );
