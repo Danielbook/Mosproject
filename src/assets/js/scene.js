@@ -105,12 +105,12 @@ function init() {
 	var sandRes = 0.1;
 	var material = Physijs.createMaterial(
 	//new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading }),
-	new THREE.MeshBasicMaterial( { color:0xfff0ff } ),
+	new THREE.MeshBasicMaterial( { color:0xE0A23F } ),
 	sandFri,
 	sandRes
 	);
 	//particles = new THREE.Points( geometry, materials[i] );
-	for(var idx = 1; idx < 1000; idx++){
+	for(var idx = 1; idx < 250; idx++){
 		sandMesh = new Physijs.SphereMesh( geometry, material );
 		sandMesh.position.set(Math.random()*4-2,0.5,Math.random()*4-2);
 		sandMesh.rotation.x = Math.random();
