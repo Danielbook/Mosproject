@@ -2,7 +2,7 @@ clear all; close all; clc;
 
 nmbrOfParticles = 2;
 
-FPS = 120;
+FPS = 30;
 simulationTime = 20; %seconds
 frames = simulationTime * FPS;
 
@@ -34,12 +34,11 @@ parameters = struct(...
 
 %% Several Particles
 
-    for idx = 1:40;
+    for idx = 1:200;
         particles(idx) = particle;
-        particles(idx).position = [parameters.leftBound+0.5*rand, parameters.topBound-0.5*rand];
+        particles(idx).position = [1+rand, 4-rand];
         particles(idx).velocity = [0 0];
         particles(idx).density = 20;
-
     end
     grid on;
     figure;
