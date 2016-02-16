@@ -40,6 +40,7 @@ for idx = 1:nmbrOfParticles;
 end
 grid on;
 figure;
+frame = 1;
 while true
     tic;
     particles = calculateForces(particles, parameters);
@@ -59,4 +60,7 @@ while true
     drawParticles(particles);
     axis([(parameters.leftBound-1) (parameters.rightBound+1) (parameters.bottomBound-1) (parameters.topBound+1)]);
     pause(0.0001);
+    % Render figure to PNG file
+    print(['img/movie0' sprintf('%03d',frame)], '-dpng');
+    frame = frame + 1;
 end

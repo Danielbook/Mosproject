@@ -157,10 +157,10 @@ function animate() {
 */
 function render() {
 	var delta = clock.getDelta();
-		scene.simulate(); // run physics
-		controls.update( delta );
-		renderer.render( scene, camera );
-	}
+	scene.simulate(); // run physics
+	controls.update( delta );
+	renderer.render( scene, camera );
+}
 function onDocumentMouseMove( event ) {
 	event.preventDefault();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
