@@ -19,7 +19,9 @@ var Parameters = function(){
 	this._restDensity = 30;
 	this._sigma = 72*Math.exp(-3);
 	this._nThreshold = 0.02;
-	this._gravity = THREE.Vector2(0, -9.82);
+	this._gravityX = 0;
+	this._gravityY = -9.82;
+
 /**	this._leftBound = -2;
 	this._rightBound = 2;
 	this._bottomBound = 0;
