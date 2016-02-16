@@ -24,6 +24,9 @@ function init() {
 		this.pressure = 0;
 		this.force = new THREE.Vector2(0, 0);
 		this.cs = 0;
+		this.geo = new THREE.BoxGeometry( 0.3, 0.3, 0.3 );
+		this.mat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+		this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
 	}
 
 	var structParameters = function(){
@@ -51,17 +54,18 @@ function init() {
 	//Setup the scene
 	scene = new THREE.Scene();
 
-	var nmbrOfParticles = 50;
+	var nmbrOfParticles = 5;
 
 	parameters = new structParameters;
-
-	testParticles = new THREE.Points( geometry, materials[i] );
 	
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
-		particles[idx] = new structParticle();
+		particles[idx] = new structParticle;
+		console.log(particles[idx]);
 	    particles[idx].position.set(-0.5+Math.random(), 2*Math.random());
 	    particles[idx].velocity.set(0.01*Math.random() -Math.random());
 	    particles[idx].density = 1602;  //DENSITY OF SAND
+	    particles[idx].displayedParticle.position.set(particles[idx].position.x, particles[idx].position.y, 0);
+		scene.add( particles[idx].displayedParticle );
 	}
 	
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -87,8 +91,14 @@ function onWindowResize() {
 
 function animate(){
 	requestAnimationFrame( animate );
-	particles = calculateForces(particles, parameters);
-	particles = performTimestep(particles, parameters.dt);
+	var newParticles = calculateForces(particles, parameters);
+	var newParticles = performTimestep(newParticles, parameters.dt);
+
+	for(var idx = 0; idx < particles.length; idx++){
+
+		particles[idx].displayedParticle.position.set(newParticles[idx].position.x, newParticles[idx].position.y, 0);
+	}
+
 	render();
 }
 
@@ -101,6 +111,7 @@ function render(){
 ** FUNCTIONS
 */
 function calculateForces(particles, parameters){
+//	console.log(particles);
 	for(idx = 0; idx < particles.length; idx++){
 		particles[idx].force = 0;
     	var density = 0;
@@ -109,6 +120,7 @@ function calculateForces(particles, parameters){
     		density = density + parameters.mass * Wpoly6(relativePosition, parameters.kernelSize);
     	}
     	particles[idx].density = density;
+
 	}
 	for(idx = 0; idx < particles.length; idx++){
 		var iPressure = (particles[idx].density - parameters.restDensity) * parameters.gasConstantK;
