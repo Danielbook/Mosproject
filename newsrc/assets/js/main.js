@@ -1,7 +1,7 @@
 var gui, blocks;
 var camera, scene, controls, renderer, dirLight, hemiLight;
 var clock = new THREE.Clock();
-var particles = [];
+var particles = Array();
 var parameters;
 
 init();
@@ -19,10 +19,10 @@ function init() {
 	*/
 	var structParticle = function(){
 		this.density = 0;
-		this.position = new THREE.Vector2(0, 0);
-		this.velocity = new THREE.Vector2(0, 0);
+		this.position = new THREE.Vector3(0, 0, 0);
+		this.velocity = new THREE.Vector3(0, 0, 0);
 		this.pressure = 0;
-		this.force = new THREE.Vector2(0, 0);
+		this.force = new THREE.Vector3(0, 0, 0);
 		this.cs = 0;
 		this.geo = new THREE.BoxGeometry( 0.3, 0.3, 0.3 );
 		this.mat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
@@ -38,7 +38,7 @@ function init() {
 	    this.restDensity = 30;
 	    this.sigma = 72e-3;
 	    this.nThreshold = 0.02;
-	    this.gravity = new THREE.Vector2(0, -9.82);
+	    this.gravity = new THREE.Vector3(0, -9.82, 0);
 	    this.leftBound = -2;
 	    this.rightBound = 2;
 	    this.bottomBound = 0;
@@ -59,13 +59,20 @@ function init() {
 	parameters = new structParameters;
 	
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
-		particles[idx] = new structParticle;
-		console.log(particles[idx]);
-	    particles[idx].position.set(-0.5+Math.random(), 2*Math.random());
-	    particles[idx].velocity.set(0.01*Math.random() -Math.random());
-	    particles[idx].density = 1602;  //DENSITY OF SAND
-	    particles[idx].displayedParticle.position.set(particles[idx].position.x, particles[idx].position.y, 0);
-		scene.add( particles[idx].displayedParticle );
+		tempParticle = new structParticle();
+		tempParticle.position.set(-0.5+Math.random(), 2*Math.random(), 0);
+		tempParticle.velocity.set(0.01*Math.random(), -Math.random(), 0);
+		tempParticle.density = 1602;  //DENSITY OF SAND
+		tempParticle.displayedParticle.position.set(tempParticle.position.x, tempParticle.position.y, 0);
+		scene.add( tempParticle.displayedParticle );
+		particles.push(tempParticle);
+
+		// particles[idx] = new structParticle();
+	 //    particles[idx].position.set(-0.5+Math.random(), 2*Math.random());
+	 //    particles[idx].velocity.set(0.01*Math.random(), -Math.random());
+	 //    particles[idx].density = 1602;  //DENSITY OF SAND
+	 //    particles[idx].displayedParticle.position.set(particles[idx].position.x, particles[idx].position.y, 0);
+		// scene.add( particles[idx].displayedParticle );
 	}
 	
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -95,8 +102,7 @@ function animate(){
 	var newParticles = performTimestep(newParticles, parameters.dt);
 
 	for(var idx = 0; idx < particles.length; idx++){
-
-		particles[idx].displayedParticle.position.set(newParticles[idx].position.x, newParticles[idx].position.y, 0);
+		particles[idx].displayedParticle.position.set(newParticles[idx].position);
 	}
 
 	render();
@@ -116,19 +122,20 @@ function calculateForces(particles, parameters){
 		particles[idx].force = 0;
     	var density = 0;
     	for(jdx = 0; jdx < particles.length; jdx++){
-    		var relativePosition = particles[idx].position - particles[idx].position;
+    		var relativePosition = particles[idx].position - particles[jdx].position;
     		density = density + parameters.mass * Wpoly6(relativePosition, parameters.kernelSize);
     	}
     	particles[idx].density = density;
 
 	}
 	for(idx = 0; idx < particles.length; idx++){
+		//console.log(particles[idx].position);
 		var iPressure = (particles[idx].density - parameters.restDensity) * parameters.gasConstantK;
 		var cs = 0;
-	    var n = new THREE.Vector2(0, 0);
+	    var n = new THREE.Vector3(0, 0, 0);
 	    var laplacianCs = 0;
-	    var pressureForce = new THREE.Vector2(0, 0);
-	    var viscosityForce = new THREE.Vector2(0, 0);
+	    var pressureForce = new THREE.Vector3(0, 0, 0);
+	    var viscosityForce = new THREE.Vector3(0, 0, 0);
 	    for(jdx = 0; jdx < particles.length; jdx++){
 	 		var relativePosition = particles[idx].position - particles[jdx].position;
 	 		//Calculate particle j's pressure force on i
@@ -144,8 +151,8 @@ function calculateForces(particles, parameters){
         	var laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
 	    }
 
-	    if (n.normalize < parameters.nThreshold){
-	        var tensionForce = new THREE.Vector2( 0, 0 );
+	    if (n.normalize() < parameters.nThreshold){
+	        var tensionForce = new THREE.Vector3(0, 0, 0 );
 	    }
 	    else{
 	    	var k = - laplacianCs / n.normalize;
