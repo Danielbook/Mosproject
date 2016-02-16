@@ -47,7 +47,7 @@ while true
     particles = performTimestep(particles, parameters.dt);
     particles = checkBoundaries(particles, parameters);
     
-    for idx = 1:length(particles) %FUSKfriktiON
+    for idx = 1:length(particles) %FUSKfriktiON^
         if(particles(idx).velocity(1) < 0.02)
             particles(idx).velocity(1) = 0;
         end

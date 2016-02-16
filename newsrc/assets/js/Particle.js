@@ -2,7 +2,6 @@
  * ------------------------------------------
  * particle.js
  * Definition of a particle
- * 
  * ------------------------------------------ 
 */
 
@@ -19,10 +18,16 @@ var Particle = function(){
 	this._pressure = 0;
 	this._forceX = 0;
 	this._forceY = 0;
-	this.cs = 0;
+	this._cs = 0;
 }
 
 /**
  * Prototype chain.
  */
 Particle.prototype.constructor = Particle;
+
+
+
+var particle = new Object();
+
+particle.velocity = 0;
