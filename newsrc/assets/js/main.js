@@ -74,7 +74,7 @@ function calculateForces(particles, parameters){
 function Wpoly6(r, h){
 	var radius = r.normalize();
 	if (radius < h && radius >= 0){
-		var w = (315/(64*pi*h^9)) * (h^2 - radius^2)^3; 
+		var w = (315/(64*pi*h^9)) * (h^2 - radius^2)^3;
 	}
 	else{
 		var w = 0;
