@@ -118,23 +118,29 @@ function calculateForces(){
     		var gradient = Wpoly6( relativePosition, parameters.kernelSize )
     		density += parameters.mass * gradient;
     	}
-    	particles[idx].density = density;
+    	particles[idx].density = density;	
+
+   //Fram till hit fungerar koden som den ska.
 
 	}
 	for(idx = 0; idx < particles.length; idx++){
 		//console.log(particles[idx].position);
 		var iPressure = (particles[idx].density - parameters.restDensity) * parameters.gasConstantK;
 		var cs = 0;
-	    var n = new THREE.Vector3();
+	    var n = new THREE.Vector3(0, 0, 0);
 	    var laplacianCs = 0;
-	    var tempVec = new THREE.Vector3();
-	    var tempVec2 = new THREE.Vector3();
-	    var tempVec3 = new THREE.Vector3();
+	    var tempVec = new THREE.Vector3(0, 0, 0);
+	    var tempVec2 = new THREE.Vector3(0, 0, 0);
+	    var tempVec3 = new THREE.Vector3(0, 0, 0);
 	    var pressureForce = new THREE.Vector3(0, 0, 0);
 	    var tensionForce = new THREE.Vector3(0, 0, 0);
 	    var viscosityForce = new THREE.Vector3(0, 0, 0);
 	    for(jdx = 0; jdx < particles.length; jdx++){
+	    	//console.log("idx = ", idx, "= ", particles[idx].position);	 //skriv ut idx
+	    	//console.log("jdx = ", jdx, "= ", particles[jdx].position);     //skriv ut jdx
 	 		relativePosition.subVectors(particles[idx].position, particles[jdx].position);
+	 		//console.log(relativePosition);
+
 	 		//Calculate particle j's pressure force on i
 	 		var jPressure = (particles[jdx].density - parameters.restDensity) * parameters.gasConstantK;
 	 		//pressureForce = pressureForce - parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
@@ -146,6 +152,7 @@ function calculateForces(){
         	tempVec.multiplyScalar( parameters.viscosityConstant * parameters.mass * laplacianWviscosity(relativePosition, parameters.kernelSize) );
 
         	viscosityForce.add(tempVec);
+        	//console.log(viscosityForce);
 
         	//Calculate "color" for particle j
      		cs += parameters.mass * (1 / particles[jdx].density) * Wpoly6(relativePosition, parameters.kernelSize);
@@ -186,7 +193,11 @@ function performTimestep(particles, dt){
 	    //vektorer: particles[idx].velocuty, particles[idx].force
 	    //skalärer: velocity, particles[idx].density, dt
 	    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
+	    console.log("tempVec = ", tempVec);
+	    console.log("density = ", particles[idx].density);
+	    console.log("force = ", particles[idx].force); 		//NaN
 	    tempVec = particles[idx].force.divideScalar(particles[idx].density);
+	    //console.log(tempVec);
 	    tempVec.multiplyScalar(dt);
 	    tempVec.addScalar(velocity);
 	    particles[idx].velocity = tempVec; 
