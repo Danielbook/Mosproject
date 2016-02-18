@@ -144,7 +144,8 @@ function calculateForces(){
 	 		//Calculate particle j's pressure force on i
 	 		var jPressure = (particles[jdx].density - parameters.restDensity) * parameters.gasConstantK;
 	 		//pressureForce = pressureForce - parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
-			pressureForce.sub(parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
+			pressureForce.addScalar(-parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
+	 		
 	 		//Calculate particle j's viscosity force on i
         	//viscosityForce = viscosityForce + parameters.viscosityConstant * parameters.mass * ((particles[jdx].velocity - particles[idx].velocity)/particles[jdx].density) * laplacianWviscosity(relativePosition, parameters.kernelSize);
         	tempVec.subVectors( particles[jdx].velocity, particles[idx].velocity );
@@ -170,13 +171,21 @@ function calculateForces(){
 	    	tempVec.multiplyVectors(k,n);
 	        tensionForce = tempVec.multiplyScalar( parameters.sigma );
 	    }
-	    //Add any external forces on i
+	    //Add any external forces on particle i
 	    var externalForce = parameters.gravity;
 	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 	    tempVec.addVectors(pressureForce, viscosityForce);
-	    tempVec2.addVectors(tensionForce,externalForce);
-	    tempVec3.addVectors(tempVec,tempVec2);
+	    
+	    //console.log("viscosity: ", viscosityForce);	//inte NaN första varvet 
+	    //console.log("pressure: ", pressureForce);		//inte NaN första varvet
+	    //console.log("tempVec: ", tempVec);			//inte NaN första varvet
+	    
+	    tempVec2.addVectors(tensionForce, externalForce);
+	    //console.log("tempVec2: ", tempVec2);		//inte NaN
+	    tempVec3.addVectors(tempVec, tempVec2);
+	    //console.log("tempVec3: ", tempVec3);		//inte NaN
 	    particles[idx].force = tempVec3;
+	    
 	}
 	var newParticles = particles;
 	return newParticles;
@@ -193,13 +202,16 @@ function performTimestep(particles, dt){
 	    //vektorer: particles[idx].velocuty, particles[idx].force
 	    //skalärer: velocity, particles[idx].density, dt
 	    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
-	    console.log("tempVec = ", tempVec);
-	    console.log("density = ", particles[idx].density);
-	    console.log("force = ", particles[idx].force); 		//NaN
+	    
+	    //console.log("tempVec = ", tempVec);					//aldrig NaN 
+	    //console.log("density = ", particles[idx].density);	//aldrig NaN 
+	    console.log("force = ", particles[idx].force); 		    //inte NaN första varvet
+	   
 	    tempVec = particles[idx].force.divideScalar(particles[idx].density);
-	    //console.log(tempVec);
+	    //console.log("tempVec: ", tempVec);		
 	    tempVec.multiplyScalar(dt);
-	    tempVec.addScalar(velocity);
+	    //console.log("velocity: ", velocity);
+	    tempVec.add(velocity);					 //VI HITTADE FELET!! addScalar --> add
 	    particles[idx].velocity = tempVec; 
 
 	    //Perform velocity integration to receive position
@@ -240,7 +252,9 @@ function gradWspiky(r, h){
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radiusz)^3);
 	}
+	console.log("w: ", w);
 	return w;	//? ska den returna?
+
 }
 
 //Used for Viscosity force
