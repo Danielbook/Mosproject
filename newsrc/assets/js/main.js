@@ -226,17 +226,18 @@ function Wpoly6(r, h){
 function gradWspiky(r, h){
 	var radius = r.normalize;
 	var w = 0;
-	if (radius < h && radius >= 0){
-		w = (15/(pi*h^6)) * (h - radius)^3;
+	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
+		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radiusz)^3);
 	}
+	return w;	//? ska den returna?
 }
 
 //Used for Viscosity force
 function laplacianWviscosity(r, h){
 	var radius = r.normalize;
 	var laplacian = 0;
-	if (radius < h && radius >= 0){
-		laplacian = (45 / (pi * h^6)) * (h - radius);
+	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
+		laplacian = (45 / (Math.pi * h^6)) * ((h - radius.x) + (h - radius.y) + (h - radius.z));
 	}
 	return laplacian;
 }
@@ -245,8 +246,8 @@ function laplacianWviscosity(r, h){
 function gradWpoly6(r, h){
 	var radius = r.normalize;
 	var gradient = 0
-	if (radius < h && radius >= 0) {
-		gradient = - ((315/(64*pi*h^9)) * 6 * (h^2 - radius^2)^2) * r;
+	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
+		gradient = - ((315/(64*Math.pi*h^9)) * 6 * ((h^2 - radius.x^2)^2 + (h^2 - radius.y^2)^2 +(h^2 - radius.z^2)^2)) * r;
 	}
 	return gradient;
 }
@@ -255,8 +256,10 @@ function gradWpoly6(r, h){
 function laplacianWpoly6(r, h){
 	var radius = r.normalize;
 	var laplacian = 0;
-	if (radius < h && radius >= 0){
-		laplacian = (315/(64*pi*h^9)) * (24 * radius^2 * (h^2 - radius^2) - 6 * (h^2 - radius^2)^2);
+	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
+		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) * 
+			((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))
+				- 6 * ((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))^2);
 	}
 	return laplacian;
 }
