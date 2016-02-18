@@ -129,6 +129,7 @@ function calculateForces(){
 	    var laplacianCs = 0;
 	    var tempVec = new THREE.Vector3();
 	    var tempVec2 = new THREE.Vector3();
+	    var tempVec3 = new THREE.Vector3();
 	    var pressureForce = new THREE.Vector3(0, 0, 0);
 	    var tensionForce = new THREE.Vector3(0, 0, 0);
 	    var viscosityForce = new THREE.Vector3(0, 0, 0);
@@ -167,7 +168,8 @@ function calculateForces(){
 	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 	    tempVec.addVectors(pressureForce, viscosityForce);
 	    tempVec2.addVectors(tensionForce,externalForce);
-	    particles[idx].force.addVectors(tempVec,tempVec2);
+	    tempVec3.addVectors(tempVec,tempVec2);
+	    particles[idx].force = tempVec3;
 	}
 	var newParticles = particles;
 	return newParticles;
@@ -178,14 +180,28 @@ function performTimestep(particles, dt){
 	for(idx = 0; idx < particles.length; idx++){
 		//Perform acceleration integration to receive velocity
 	    var velocity = particles[idx].velocity;
+	    var tempVec = new THREE.Vector3();		//!! declare new vector
+	    var TempVec1 = new THREE.Vector3();
 	    
-	    particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
-	    
+	    //vektorer: particles[idx].velocuty, particles[idx].force
+	    //skalärer: velocity, particles[idx].density, dt
+	    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
+	    tempVec = particles[idx].force.divideScalar(particles[idx].density);
+	    tempVec.multiplyScalar(dt);
+	    tempVec.addScalar(velocity);
+	    particles[idx].velocity = tempVec; 
+
 	    //Perform velocity integration to receive position
 	    var position = particles[idx].position;
 	    
-	    position = position + particles[idx].velocity * dt;
-	    particles[idx].position = position;
+	    //vektor = particles[].velocity
+	    //skalär = position, dt
+	    //position = position + particles[idx].velocity * dt;
+	    //particles[idx].position = position;
+	    tempVec1 = particles[idx].velocity.multiplyScalar(dt);
+	    tempVec1.addVectors(tempVec1, position);
+	    particles[idx].position = tempVec1;
+	    
 	}
 	//Update to new positions
 	var newParticles = particles;
