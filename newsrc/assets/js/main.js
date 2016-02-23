@@ -23,7 +23,7 @@ var structParticle = function(){
 var structParameters = function(){
 	this.dt = 1 / FPS;
 	this.mass = 0.8;
-	this.kernelSize = 0.5;
+	this.kernelSize = 0.05;
 	this.gasConstantK = 1;
 	this.viscosityConstant = 30;
 	this.restDensity = 30;
@@ -32,8 +32,8 @@ var structParameters = function(){
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
-	this.bottomBound = 0;
-	this.topBound = 5;
+	this.bottomBound = -2;
+	this.topBound = 2;
 	this.wallDamper = 0.005;
 }
 
@@ -41,30 +41,68 @@ init();
 animate();
 function init() {
 	//Setup GUI
-	gui = new DAT.GUI({ height: 3*32-1});
-	blocks = {blocks: 50};
-	gui.add(blocks, 'blocks');
+	// gui = new DAT.GUI({ height: 3*32-1});
+	// blocks = {blocks: 50};
+	// gui.add(blocks, 'blocks');
 
 	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-	camera.position.set( 0, 1.8, 10 );
+	camera.position.set( 0, 0, 10 );
 
 	//Setup the scene
 	scene = new THREE.Scene();
 
-	var nmbrOfParticles = 10;
+	// CONTROLS
+	controls = new THREE.OrbitControls( camera );
+	controls.maxPolarAngle = 0.9 * Math.PI / 2;
+	controls.enableZoom = false;
+
+	// var planeGeometry = new THREE.PlaneGeometry( 1, 1, 1 );
+	// var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+	// var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
+	// scene.add( planeMesh );
+
+	var nmbrOfParticles = 2;
 
 	parameters = new structParameters();
 
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
 		particles[idx] = new structParticle();
-		particles[idx].position = new THREE.Vector3(-0.5+Math.random(), 2*Math.random(), 0);
-		particles[idx].velocity = new THREE.Vector3(0.01*Math.random(), -Math.random(), 0);
+		particles[idx].position = new THREE.Vector3(Math.random(), Math.random(), 0);
     particles[idx].density = 1602;  //DENSITY OF SAND
     particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, 0 );
     scene.add( particles[idx].displayedParticle );
   }
+
+  // LIGHTS
+	var light = new THREE.DirectionalLight( 0xaabbff, 0.3 );
+	light.position.x = 300;
+	light.position.y = 250;
+	light.position.z = -500;
+	scene.add( light );
+
+  // SKYDOME
+	var vertexShader = document.getElementById( 'vertexShader' ).textContent;
+	var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+	var uniforms = {
+		topColor: 	 { type: "c", value: new THREE.Color( 0x0077ff ) },
+		bottomColor: { type: "c", value: new THREE.Color( 0xffffff ) },
+		offset:		 { type: "f", value: 400 },
+		exponent:	 { type: "f", value: 0.6 }
+	};
+	uniforms.topColor.value.copy( light.color );
+
+	var skyGeo = new THREE.SphereGeometry( 4000, 32, 15 );
+	var skyMat = new THREE.ShaderMaterial( {
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragmentShader,
+		side: THREE.BackSide
+	} );
+
+	var sky = new THREE.Mesh( skyGeo, skyMat );
+	scene.add( sky );
 
 	  renderer = new THREE.WebGLRenderer( { antialias: false } );
 	  renderer.setClearColor( 0xBC9C63 );
@@ -88,19 +126,25 @@ function onWindowResize() {
 }
 
 function animate(){
-	render();
 	for(var idx = 0; idx < particles.length; idx++){
-		console.log( particles[idx].displayedParticle.position );
+		//console.log( particles[idx].displayedParticle.position );
+		console.log( "Velocity: ", particles[idx].velocity );
 	}
 	requestAnimationFrame( animate );
-	var newParticles = calculateForces();
-	var newParticles = performTimestep(newParticles, parameters.dt);
-
+	calculateForces();
+  performTimestep();
+  
 	for(var idx = 0; idx < particles.length; idx++){
-		particles[idx].displayedParticle.position.setX(newParticles[idx].position.x);
-		particles[idx].displayedParticle.position.setY(newParticles[idx].position.y);
-		particles[idx].displayedParticle.position.setZ(newParticles[idx].position.z);
+		particles[idx].displayedParticle.position.setX(particles[idx].position.x);
+		particles[idx].displayedParticle.position.setY(particles[idx].position.y);
+		particles[idx].displayedParticle.position.setZ(particles[idx].position.z);
+
 	}
+
+	checkBoundaries();
+	console.log("---------------")
+
+	render();
 }
 
 function render(){
@@ -123,9 +167,6 @@ for(idx = 0; idx < particles.length; idx++){
 		density += parameters.mass * gradient;
 	}
 	particles[idx].density = density;	
-
-   //Fram till hit fungerar koden som den ska.
-
  }
  for(idx = 0; idx < particles.length; idx++){
 		//console.log(particles[idx].position);
@@ -181,60 +222,70 @@ for(idx = 0; idx < particles.length; idx++){
 	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 	    tempVec.addVectors(pressureForce, viscosityForce);
 	    
-	    //console.log("viscosity: ", viscosityForce);	//inte NaN första varvet 
-	    //console.log("pressure: ", pressureForce);		//inte NaN första varvet
-	    //console.log("tempVec: ", tempVec);			//inte NaN första varvet
+	    console.log("viscosity: ", viscosityForce);	//inte NaN första varvet 
+	    console.log("pressure: ", pressureForce);		//inte NaN första varvet
 	    
 	    tempVec2.addVectors(tensionForce, externalForce);
 	    //console.log("tempVec2: ", tempVec2);		//inte NaN
 	    tempVec3.addVectors(tempVec, tempVec2);
 	    //console.log("tempVec3: ", tempVec3);		//inte NaN
 	    particles[idx].force = tempVec3;
-	    
+	    console.log("force:", particles[idx].force);
 	  }
-	  var newParticles = particles;
-	  return newParticles;
 	}
 
 //Euler time step
-function performTimestep(particles, dt){
+function performTimestep(){
 	for(idx = 0; idx < particles.length; idx++){
 		//Perform acceleration integration to receive velocity
-		var velocity = particles[idx].velocity;
-	    var tempVec = new THREE.Vector3();		//!! declare new vector
-	    var TempVec1 = new THREE.Vector3();
-	    
-	    //vektorer: particles[idx].velocuty, particles[idx].force
-	    //skalärer: velocity, particles[idx].density, dt
-	    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
-	    
-	    //console.log("tempVec = ", tempVec);					//aldrig NaN 
-	    //console.log("density = ", particles[idx].density);	//aldrig NaN 
-	    //console.log("force = ", particles[idx].force); 		    //inte NaN första varvet
+    var tempVec = new THREE.Vector3();		//!! declare new vector
+    
+    //vektorer: particles[idx].velocuty, particles[idx].force
+    //skalärer: velocity, particles[idx].density, dt
+    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
+    
+    //console.log("tempVec = ", tempVec);					//aldrig NaN 
+    //console.log("density = ", particles[idx].density);	//aldrig NaN 
+    //console.log("force = ", particles[idx].force); 		    //inte NaN första varvet
 
-	    tempVec = particles[idx].force.divideScalar(particles[idx].density);
-	    //console.log("tempVec: ", tempVec);		
-	    tempVec.multiplyScalar(dt);
-	    //console.log("velocity: ", velocity);
-	    tempVec.add(velocity);					 //VI HITTADE FELET!! addScalar --> add
-	    particles[idx].velocity = tempVec; 
+    tempVec = particles[idx].force.divideScalar(particles[idx].density);
+    //console.log("tempVec: ", tempVec);		
+    tempVec.multiplyScalar(parameters.dt);
+    //console.log("velocity: ", velocity);
+    tempVec.add(particles[idx].velocity);					 //VI HITTADE FELET!! addScalar --> add
+    particles[idx].velocity = tempVec; 
 
-	    //Perform velocity integration to receive position
-	    var position = particles[idx].position;
-	    
-	    //vektor = particles[].velocity
-	    //skalär = position, dt
-	    //position = position + particles[idx].velocity * dt;
-	    //particles[idx].position = position;
-	    tempVec1 = particles[idx].velocity.multiplyScalar(dt);
-	    tempVec1.addVectors(tempVec1, position);
-	    particles[idx].position = tempVec1;
-	    
-	  }
-	//Update to new positions
-	var newParticles = particles;
-	return newParticles;
+    //Perform velocity integration to receive position
+    
+    //vektor = particles[].velocity
+    //skalär = position, dt
+    //position = position + particles[idx].velocity * dt;
+    //particles[idx].position = position;
+    tempVec1 = particles[idx].velocity.multiplyScalar(parameters.dt);
+    tempVec1.addVectors(tempVec1, particles[idx].position);
+    particles[idx].position = tempVec1;	    
+  }
 }
+
+function checkBoundaries(){
+	for (var idx = 0; idx < particles.length; idx++) {
+		console.log("Before boundary check: ", particles[idx].position)
+
+		if (particles[idx].position.x < parameters.leftBound) {
+			particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
+		}
+		else if (particles[idx].position.x > parameters.rightBound) {
+			particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
+		}
+		if (particles[idx].position.y < parameters.bottomBound) {
+			particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
+		}
+		else if (particles[idx].position.y > parameters.topBound) {
+			particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
+		}
+    console.log("After boundary check: ", particles[idx].position);
+	}
+} 
 
 /*
 ** KERNELS
@@ -258,8 +309,7 @@ function gradWspiky(r, h){
 		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radiusz)^3);
 	}
 	//console.log("w: ", w);
-	return w;	//? ska den returna?
-
+	return w;	//? ska den returna? ja
 }
 
 //Used for Viscosity force
