@@ -29,7 +29,7 @@ var structParameters = function(){
 	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
-	this.gravity = new THREE.Vector3(0, -9.82, 0);
+	this.gravity = new THREE.Vector3(0, -9000.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
 	this.bottomBound = 0;
@@ -283,17 +283,21 @@ function checkBoundaries(){
 	for (var idx = 0; idx < particles.length; idx++) {
 		console.log("Before boundary check:  ",idx,": ", particles[idx].position)
 
-		if (particles[idx].position.x < parameters.leftBound) {
-			particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
-		}
-		else if (particles[idx].position.x > parameters.rightBound) {
-			particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
-		}
-		if (particles[idx].position.y < parameters.bottomBound) {
-			particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
-		}
-		else if (particles[idx].position.y > parameters.topBound) {
-			particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
+		// if (particles[idx].position.x < parameters.leftBound) {
+		// 	particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
+		// }
+		// else if (particles[idx].position.x > parameters.rightBound) {
+		// 	particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
+		// }
+		// if (particles[idx].position.y < parameters.bottomBound) {
+		// 	particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
+		// }
+		// else if (particles[idx].position.y > parameters.topBound) {
+		// 	particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
+		// }
+		// 
+		if(particles[idx].position.y < parameters.bottomBound){
+			particles[idx].position.y = 0;
 		}
     console.log("After boundary check:  ",idx,": ", particles[idx].position);
 	}
