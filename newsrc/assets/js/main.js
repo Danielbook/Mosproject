@@ -163,7 +163,7 @@ function calculateForces(){
         	laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
 	    }
 
-	    if (n.normalize() < parameters.nThreshold){
+	    if (n.normalize < parameters.nThreshold){
 	        tensionForce = new THREE.Vector3(0, 0, 0);
 	    }
 	    else{
