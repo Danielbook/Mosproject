@@ -32,7 +32,7 @@ var structParameters = function(){
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
-	this.bottomBound = -2;
+	this.bottomBound = 0;
 	this.topBound = 2;
 	this.wallDamper = 0.005;
 }
@@ -69,7 +69,7 @@ function init() {
 
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
 		particles[idx] = new structParticle();
-		particles[idx].position = new THREE.Vector3(Math.random(), Math.random(), 0);
+		particles[idx].position = new THREE.Vector3(Math.random(), 2, 0);
     particles[idx].density = 1602;  //DENSITY OF SAND
     particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, 0 );
     scene.add( particles[idx].displayedParticle );
@@ -130,7 +130,7 @@ function onWindowResize() {
 
 function animate(){
 	for(var idx = 0; idx < particles.length; idx++){
-		//console.log( particles[idx].displayedParticle.position );
+		console.log( "Position ",idx,": ",particles[idx].position );
 		console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
 	requestAnimationFrame( animate );
@@ -145,6 +145,10 @@ function animate(){
 	}
 
 	checkBoundaries();
+	for(var idx = 0; idx < particles.length; idx++){
+		console.log( "Position ",idx,": ",particles[idx].position );
+		console.log( "Velocity ",idx,": ", particles[idx].velocity );
+	}
 	console.log("---------------")
 
 	render();
@@ -242,31 +246,36 @@ function performTimestep(){
 	for(idx = 0; idx < particles.length; idx++){
 		//Perform acceleration integration to receive velocity
     var tempVec = new THREE.Vector3();		//!! declare new vector
-    
+    var tempVec1 = new THREE.Vector3();
+
     //vektorer: particles[idx].velocuty, particles[idx].force
     //skalärer: velocity, particles[idx].density, dt
     //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
+    //
+    //% Perform acceleration integration to receive velocity
+    // velocity = particles(k).velocity;
     
-    //console.log("tempVec = ", tempVec);					//aldrig NaN 
-    //console.log("density = ", particles[idx].density);	//aldrig NaN 
-    //console.log("force = ", particles[idx].force); 		    //inte NaN första varvet
-
-    tempVec = particles[idx].force.divideScalar(particles[idx].density);
-    //console.log("tempVec: ", tempVec);		
+    // particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
+    
+    // % Perform velocity integration to receive position
+    // position = particles(k).position;
+    
+    // position = position + particles(k).velocity * dt;
+    // particles(k).position = position;
+    
+    // Perform acceleration integration to receive velocity
+    tempVec = particles[idx].force;
+    tempVec.divideScalar(particles[idx].density);
     tempVec.multiplyScalar(parameters.dt);
-    //console.log("velocity: ", velocity);
-    tempVec.add(particles[idx].velocity);					 //VI HITTADE FELET!! addScalar --> add
-    particles[idx].velocity = tempVec; 
-
-    //Perform velocity integration to receive position
+    tempVec.add(particles[idx].velocity);
     
-    //vektor = particles[].velocity
-    //skalär = position, dt
-    //position = position + particles[idx].velocity * dt;
-    //particles[idx].position = position;
-    tempVec1 = particles[idx].velocity.multiplyScalar(parameters.dt);
-    tempVec1.addVectors(tempVec1, particles[idx].position);
-    particles[idx].position = tempVec1;	    
+    particles[idx].velocity = tempVec;
+
+    // Perform velocity integration to receive position
+    tempVec1 = particles[idx].velocity;
+    tempVec1.multiplyScalar(parameters.dt);
+
+    particles[idx].position.add(tempVec1);
   }
 }
 
@@ -365,9 +374,9 @@ function buildAxis( src, dst, colorHex, dashed ) {
             mat; 
 
         if(dashed) {
-                mat = new THREE.LineDashedMaterial({ linewidth: 3, color: colorHex, dashSize: 3, gapSize: 3 });
+                mat = new THREE.LineDashedMaterial({ linewidth: 2, color: colorHex, dashSize: 2, gapSize: 0.5 });
         } else {
-                mat = new THREE.LineBasicMaterial({ linewidth: 3, color: colorHex });
+                mat = new THREE.LineBasicMaterial({ linewidth: 2, color: colorHex });
         }
 
         geom.vertices.push( src.clone() );
