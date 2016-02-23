@@ -63,7 +63,7 @@ function init() {
 	// var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 	// scene.add( planeMesh );
 
-	var nmbrOfParticles = 2;
+	var nmbrOfParticles = 1;
 
 	parameters = new structParameters();
 
@@ -74,6 +74,9 @@ function init() {
     particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, 0 );
     scene.add( particles[idx].displayedParticle );
   }
+
+  axes = buildAxes(100);
+  scene.add( axes );
 
   // LIGHTS
 	var light = new THREE.DirectionalLight( 0xaabbff, 0.3 );
@@ -128,7 +131,7 @@ function onWindowResize() {
 function animate(){
 	for(var idx = 0; idx < particles.length; idx++){
 		//console.log( particles[idx].displayedParticle.position );
-		console.log( "Velocity: ", particles[idx].velocity );
+		console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
 	requestAnimationFrame( animate );
 	calculateForces();
@@ -207,7 +210,7 @@ for(idx = 0; idx < particles.length; idx++){
    		n.addScalar(parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize) );
       	//Calculate laplacian of "color" for particle j
       	laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
-      }
+    }
 
       if (n.normalize() < parameters.nThreshold){
       	tensionForce = new THREE.Vector3(0, 0, 0);
@@ -216,21 +219,21 @@ for(idx = 0; idx < particles.length; idx++){
       	var k = n.normalize().divideScalar(-laplacianCs);
       	tempVec.multiplyVectors(k,n);
       	tensionForce = tempVec.multiplyScalar( parameters.sigma );
-  }
+  		}
 	    //Add any external forces on particle i
 	    var externalForce = parameters.gravity;
 	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 	    tempVec.addVectors(pressureForce, viscosityForce);
 	    
-	    console.log("viscosity: ", viscosityForce);	//inte NaN första varvet 
-	    console.log("pressure: ", pressureForce);		//inte NaN första varvet
+	    console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet 
+	    console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
 	    
 	    tempVec2.addVectors(tensionForce, externalForce);
 	    //console.log("tempVec2: ", tempVec2);		//inte NaN
 	    tempVec3.addVectors(tempVec, tempVec2);
 	    //console.log("tempVec3: ", tempVec3);		//inte NaN
 	    particles[idx].force = tempVec3;
-	    console.log("force:", particles[idx].force);
+	    console.log("force: ",idx,": ", particles[idx].force);
 	  }
 	}
 
@@ -269,7 +272,7 @@ function performTimestep(){
 
 function checkBoundaries(){
 	for (var idx = 0; idx < particles.length; idx++) {
-		console.log("Before boundary check: ", particles[idx].position)
+		console.log("Before boundary check:  ",idx,": ", particles[idx].position)
 
 		if (particles[idx].position.x < parameters.leftBound) {
 			particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
@@ -283,7 +286,7 @@ function checkBoundaries(){
 		else if (particles[idx].position.y > parameters.topBound) {
 			particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
 		}
-    console.log("After boundary check: ", particles[idx].position);
+    console.log("After boundary check:  ",idx,": ", particles[idx].position);
 	}
 } 
 
@@ -342,4 +345,37 @@ function laplacianWpoly6(r, h){
 			- 6 * ((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))^2);
 	}
 	return laplacian;
+}
+
+function buildAxes( length ) {
+  var axes = new THREE.Object3D();
+
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( length, 0, 0 ), 0xFF0000, false ) ); // +X
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -length, 0, 0 ), 0xFF0000, true) ); // -X
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, length, 0 ), 0x00FF00, false ) ); // +Y
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -length, 0 ), 0x00FF00, true ) ); // -Y
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, length ), 0x0000FF, false ) ); // +Z
+  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -length ), 0x0000FF, true ) ); // -Z
+
+  return axes;
+}
+
+function buildAxis( src, dst, colorHex, dashed ) {
+        var geom = new THREE.Geometry(),
+            mat; 
+
+        if(dashed) {
+                mat = new THREE.LineDashedMaterial({ linewidth: 3, color: colorHex, dashSize: 3, gapSize: 3 });
+        } else {
+                mat = new THREE.LineBasicMaterial({ linewidth: 3, color: colorHex });
+        }
+
+        geom.vertices.push( src.clone() );
+        geom.vertices.push( dst.clone() );
+        geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
+
+        var axis = new THREE.Line( geom, mat, THREE.LinePieces );
+
+        return axis;
+
 }
