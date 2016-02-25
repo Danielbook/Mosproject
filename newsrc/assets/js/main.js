@@ -16,7 +16,7 @@ var structParticle = function(){
 	this.force = new THREE.Vector3(0, 0, 0);
 	this.cs = 0;
 	this.geo = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
-	this.mat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+	this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
 	this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
 }
 
@@ -29,10 +29,10 @@ var structParameters = function(){
 	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
-	this.gravity = new THREE.Vector3(0, -9000.82, 0);
+	this.gravity = new THREE.Vector3(0, -900.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
-	this.bottomBound = 0;
+	this.bottomBound = 0.05;
 	this.topBound = 2;
 	this.wallDamper = 0.005;
 }
@@ -48,30 +48,31 @@ function init() {
 	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-	camera.position.set( 0, 0, 10 );
+	camera.position.set( 0, 0, 5 );
 
 	//Setup the scene
 	scene = new THREE.Scene();
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera );
-	controls.maxPolarAngle = 0.9 * Math.PI / 2;
+	// controls.maxPolarAngle = 0.9 * Math.PI / 2; //begränsar kamerarörelsen
 	controls.enableZoom = false;
 
-	// var planeGeometry = new THREE.PlaneGeometry( 1, 1, 1 );
-	// var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-	// var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
-	// scene.add( planeMesh );
+	var planeGeometry = new THREE.PlaneGeometry( 5, 5, 5 );
+	var planeMaterial = new THREE.MeshBasicMaterial( {color: 0x189138, side: THREE.DoubleSide} );
+	var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
+	planeMesh.rotation.x = 1.57;
+	scene.add( planeMesh );
 
-	var nmbrOfParticles = 1;
+	var nmbrOfParticles = 30;
 
 	parameters = new structParameters();
 
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
 		particles[idx] = new structParticle();
-		particles[idx].position = new THREE.Vector3(Math.random(), 2, 0);
+		particles[idx].position = new THREE.Vector3(Math.random(), Math.random()+0.05, Math.random());
     particles[idx].density = 1602;  //DENSITY OF SAND
-    particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, 0 );
+    particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
     scene.add( particles[idx].displayedParticle );
   }
 
@@ -130,8 +131,8 @@ function onWindowResize() {
 
 function animate(){
 	for(var idx = 0; idx < particles.length; idx++){
-		console.log( "Position ",idx,": ",particles[idx].position );
-		console.log( "Velocity ",idx,": ", particles[idx].velocity );
+		//console.log( "Position ",idx,": ",particles[idx].position );
+		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
 	requestAnimationFrame( animate );
 	calculateForces();
@@ -146,10 +147,10 @@ function animate(){
 
 	checkBoundaries();
 	for(var idx = 0; idx < particles.length; idx++){
-		console.log( "Position ",idx,": ",particles[idx].position );
-		console.log( "Velocity ",idx,": ", particles[idx].velocity );
+		//console.log( "Position ",idx,": ",particles[idx].position );
+		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
-	console.log("---------------")
+	//console.log("---------------")
 
 	render();
 }
@@ -229,15 +230,15 @@ for(idx = 0; idx < particles.length; idx++){
 	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 	    tempVec.addVectors(pressureForce, viscosityForce);
 	    
-	    console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet 
-	    console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
+	    //console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet 
+	    //console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
 	    
 	    tempVec2.addVectors(tensionForce, externalForce);
 	    //console.log("tempVec2: ", tempVec2);		//inte NaN
 	    tempVec3.addVectors(tempVec, tempVec2);
 	    //console.log("tempVec3: ", tempVec3);		//inte NaN
 	    particles[idx].force = tempVec3;
-	    console.log("force: ",idx,": ", particles[idx].force);
+	    //console.log("force: ",idx,": ", particles[idx].force);
 	  }
 	}
 
@@ -281,7 +282,7 @@ function performTimestep(){
 
 function checkBoundaries(){
 	for (var idx = 0; idx < particles.length; idx++) {
-		console.log("Before boundary check:  ",idx,": ", particles[idx].position)
+		//console.log("Before boundary check:  ",idx,": ", particles[idx].position)
 
 		// if (particles[idx].position.x < parameters.leftBound) {
 		// 	particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
@@ -297,9 +298,9 @@ function checkBoundaries(){
 		// }
 		// 
 		if(particles[idx].position.y < parameters.bottomBound){
-			particles[idx].position.y = 0;
+			particles[idx].position.y = 0.05;
 		}
-    console.log("After boundary check:  ",idx,": ", particles[idx].position);
+    //console.log("After boundary check:  ",idx,": ", particles[idx].position);
 	}
 } 
 
@@ -311,6 +312,7 @@ function Wpoly6(r, h){
 	var radius = r;
 	radius.normalize();
 	var w = 0;
+
 	if (radius.x < h && radius.y < h && radius.z < h){
 		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius.x^2)^3 + (h^2 - radius.y^2)^3 +(h^2 - radius.z^2)^3); 
 	}
@@ -319,10 +321,10 @@ function Wpoly6(r, h){
 
 //SMOOTHING KERNEL
 function gradWspiky(r, h){
-	var radius = r.normalize;
+	var radius = r.normalize();
 	var w = 0;
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radiusz)^3);
+		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radius.z)^3);
 	}
 	//console.log("w: ", w);
 	return w;	//? ska den returna? ja
@@ -330,7 +332,7 @@ function gradWspiky(r, h){
 
 //Used for Viscosity force
 function laplacianWviscosity(r, h){
-	var radius = r.normalize;
+	var radius = r.normalize();
 	var laplacian = 0;
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		laplacian = (45 / (Math.pi * h^6)) * ((h - radius.x) + (h - radius.y) + (h - radius.z));
@@ -340,8 +342,11 @@ function laplacianWviscosity(r, h){
 
 //Used for surface normal (n)
 function gradWpoly6(r, h){
-	var radius = r.normalize;
+	var radius = r.normalize();
 	var gradient = 0
+
+	console.log("----Y----:", radius.y);
+
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		gradient = - ((315/(64*Math.pi*h^9)) * 6 * ((h^2 - radius.x^2)^2 + (h^2 - radius.y^2)^2 +(h^2 - radius.z^2)^2)) * r;
 	}
@@ -350,7 +355,7 @@ function gradWpoly6(r, h){
 
 //Used for curvatore of surface (k(cs))
 function laplacianWpoly6(r, h){
-	var radius = r.normalize;
+	var radius = r.normalize();
 	var laplacian = 0;
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) * 
