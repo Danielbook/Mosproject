@@ -3,6 +3,7 @@ var camera, scene, controls, renderer, dirLight, hemiLight;
 var clock = new THREE.Clock();
 var particles = [];
 var parameters;
+var colors = [];	//new variable for the colors for the particles
 
 /*
  ** CONSTRUCTORS
@@ -14,15 +15,15 @@ var structParticle = function(){
 	this.pressure = 0;
 	this.force = new THREE.Vector3(0, 0, 0);
 	this.cs = 0;
-	this.geo = new THREE.SphereGeometry( 0.1, 8, 8 );
-	this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
+	this.geo = new THREE.SphereGeometry( 0.05, 4, 4 );
+	//this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
 	this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
 }
 
 var structParameters = function(){
 	this.dt = 0.2;
 	this.mass = 1;
-	this.kernelSize = 0.5;
+	this.kernelSize = 0.2;
 	this.gasConstantK = 1;
 	this.viscosityConstant = 50;
 	this.restDensity = 30;
@@ -62,7 +63,7 @@ function init() {
 	planeMesh.rotation.x = 1.57;
 	scene.add( planeMesh );
 
-	var nmbrOfParticles = 10;
+	var nmbrOfParticles = 40;
 
 	parameters = new structParameters();
 
@@ -72,7 +73,15 @@ function init() {
 		particles[idx].density = 1602;  //DENSITY OF SAND
 		particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
 		scene.add( particles[idx].displayedParticle );
+
+		// -----------  RANDOM COLORS FOR THE PARTICLES -----------------
+		// instead of this in struct: this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
+        colors[idx] = new THREE.Color();
+        colors[idx].setHSL( Math.random(), 1.0, 0.5 );		//randomize the color
+        particles.mat = new THREE.MeshBasicMaterial({color: colors[idx]});  	
 	}
+
+
 
 	axes = buildAxes(100);
 	scene.add( axes );
@@ -95,7 +104,7 @@ function init() {
 	};
 	uniforms.topColor.value.copy( light.color );
 
-	var skyGeo = new THREE.SphereGeometry( 4000, 32, 15 );
+	var skyGeo = new THREE.SphereGeometry( 800, 32, 16 );
 	var skyMat = new THREE.ShaderMaterial( {
 		uniforms: uniforms,
 		vertexShader: vertexShader,
