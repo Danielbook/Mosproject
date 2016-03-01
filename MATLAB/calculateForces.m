@@ -30,13 +30,13 @@ for i=1:length(particles)
         viscosityForce = viscosityForce + parameters.viscosityConstant * ...
             parameters.mass * ((particles(j).velocity - particles(i).velocity)/particles(j).density) * ...
             laplacianWviscosity(relativePosition, parameters.kernelSize);
-        % Calculate "color" for particle j
+
         cs = cs + parameters.mass * (1 / particles(j).density) * ...
             Wpoly6(relativePosition, parameters.kernelSize);
-        % Calculate gradient of "color" for particle j
+
         n = n + parameters.mass * (1 / particles(j).density) * ...
             gradWpoly6(relativePosition, parameters.kernelSize);
-        % Calculate laplacian of "color" for particle j
+
         laplacianCs = laplacianCs + parameters.mass * (1 / particles(j).density) * ...
             laplacianWpoly6(relativePosition, parameters.kernelSize);
     end

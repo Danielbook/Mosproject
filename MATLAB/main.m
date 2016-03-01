@@ -61,6 +61,6 @@ while true
     axis([(parameters.leftBound-1) (parameters.rightBound+1) (parameters.bottomBound-1) (parameters.topBound+1)]);
     pause(0.0001);
     % Render figure to PNG file
-    print(['img/movie0' sprintf('%03d',frame)], '-dpng');
+    % print(['img/movie0' sprintf('%03d',frame)], '-dpng');
     frame = frame + 1;
 end

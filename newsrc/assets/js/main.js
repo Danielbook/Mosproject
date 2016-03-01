@@ -3,11 +3,10 @@ var camera, scene, controls, renderer, dirLight, hemiLight;
 var clock = new THREE.Clock();
 var particles = [];
 var parameters;
-var FPS = 30;
 
 /*
-** CONSTRUCTORS
-*/
+ ** CONSTRUCTORS
+ */
 var structParticle = function(){
 	this.density = 0;
 	this.position = new THREE.Vector3(0, 0, 0);
@@ -15,21 +14,21 @@ var structParticle = function(){
 	this.pressure = 0;
 	this.force = new THREE.Vector3(0, 0, 0);
 	this.cs = 0;
-	this.geo = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
+	this.geo = new THREE.SphereGeometry( 0.1, 8, 8 );
 	this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
 	this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
 }
 
 var structParameters = function(){
-	this.dt = 1 / FPS;
-	this.mass = 0.8;
-	this.kernelSize = 0.05;
+	this.dt = 0.2;
+	this.mass = 1;
+	this.kernelSize = 0.5;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 30;
+	this.viscosityConstant = 50;
 	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
-	this.gravity = new THREE.Vector3(0, -900.82, 0);
+	this.gravity = new THREE.Vector3(0, -9.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
 	this.bottomBound = 0.05;
@@ -41,9 +40,8 @@ init();
 animate();
 function init() {
 	//Setup GUI
-	// gui = new DAT.GUI({ height: 3*32-1});
-	// blocks = {blocks: 50};
-	// gui.add(blocks, 'blocks');
+	gui = new DAT.GUI({ height: 3*32-1});
+	gui.add({blocks: 50}, 'blocks', 0, 100);
 
 	//Setup camera
 	container = document.getElementById( 'container' );
@@ -64,29 +62,29 @@ function init() {
 	planeMesh.rotation.x = 1.57;
 	scene.add( planeMesh );
 
-	var nmbrOfParticles = 30;
+	var nmbrOfParticles = 10;
 
 	parameters = new structParameters();
 
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
 		particles[idx] = new structParticle();
 		particles[idx].position = new THREE.Vector3(Math.random(), Math.random()+0.05, Math.random());
-    particles[idx].density = 1602;  //DENSITY OF SAND
-    particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
-    scene.add( particles[idx].displayedParticle );
-  }
+		particles[idx].density = 1602;  //DENSITY OF SAND
+		particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
+		scene.add( particles[idx].displayedParticle );
+	}
 
-  axes = buildAxes(100);
-  scene.add( axes );
+	axes = buildAxes(100);
+	scene.add( axes );
 
-  // LIGHTS
+	// LIGHTS
 	var light = new THREE.DirectionalLight( 0xaabbff, 0.3 );
 	light.position.x = 300;
 	light.position.y = 250;
 	light.position.z = -500;
 	scene.add( light );
 
-  // SKYDOME
+	// SKYDOME
 	var vertexShader = document.getElementById( 'vertexShader' ).textContent;
 	var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
 	var uniforms = {
@@ -108,16 +106,16 @@ function init() {
 	var sky = new THREE.Mesh( skyGeo, skyMat );
 	scene.add( sky );
 
-	  renderer = new THREE.WebGLRenderer( { antialias: false } );
-	  renderer.setClearColor( 0xBC9C63 );
-	  renderer.setPixelRatio( window.devicePixelRatio );
-	  renderer.setSize( window.innerWidth, window.innerHeight );
-	  container.appendChild( renderer.domElement );
-	  renderer.gammaInput = true;
-	  renderer.gammaOutput = true;
-	  renderer.shadowMap.enabled = true;
-	  renderer.shadowMap.cullFace = THREE.CullFaceBack;
-	  window.addEventListener( 'resize', onWindowResize, false );
+	renderer = new THREE.WebGLRenderer( { antialias: false } );
+	renderer.setClearColor( 0xBC9C63 );
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	container.appendChild( renderer.domElement );
+	renderer.gammaInput = true;
+	renderer.gammaOutput = true;
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.cullFace = THREE.CullFaceBack;
+	window.addEventListener( 'resize', onWindowResize, false );
 	//renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	//renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
 	//renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
@@ -136,8 +134,8 @@ function animate(){
 	}
 	requestAnimationFrame( animate );
 	calculateForces();
-  performTimestep();
-  
+	performTimestep();
+
 	for(var idx = 0; idx < particles.length; idx++){
 		particles[idx].displayedParticle.position.setX(particles[idx].position.x);
 		particles[idx].displayedParticle.position.setY(particles[idx].position.y);
@@ -161,22 +159,22 @@ function render(){
 }
 
 /*
-** FUNCTIONS
-*/
+ ** FUNCTIONS
+ */
 function calculateForces(){
 //	console.log(particles);
-var relativePosition = new THREE.Vector3();
-for(idx = 0; idx < particles.length; idx++){
-	particles[idx].force = 0;
-	var density = 0;
-	for(jdx = 0; jdx < particles.length; jdx++){
-		relativePosition.subVectors( particles[idx].position, particles[jdx].position );
-		var gradient = Wpoly6( relativePosition, parameters.kernelSize )
-		density += parameters.mass * gradient;
+	var relativePosition = new THREE.Vector3();
+	for(idx = 0; idx < particles.length; idx++){
+		particles[idx].force = 0;
+		var density = 0;
+		for(jdx = 0; jdx < particles.length; jdx++){
+			relativePosition.subVectors( particles[idx].position, particles[jdx].position );
+			var gradient = Wpoly6( relativePosition, parameters.kernelSize )
+			density += parameters.mass * gradient;
+		}
+		particles[idx].density = density;
 	}
-	particles[idx].density = density;	
- }
- for(idx = 0; idx < particles.length; idx++){
+	for(idx = 0; idx < particles.length; idx++){
 		//console.log(particles[idx].position);
 		var iPressure = (particles[idx].density - parameters.restDensity) * parameters.gasConstantK;
 		var cs = 0;
@@ -189,95 +187,95 @@ for(idx = 0; idx < particles.length; idx++){
 		var tensionForce = new THREE.Vector3(0, 0, 0);
 		var viscosityForce = new THREE.Vector3(0, 0, 0);
 		for(jdx = 0; jdx < particles.length; jdx++){
-    	//console.log("idx = ", idx, "= ", particles[idx].position);	 //skriv ut idx
-    	//console.log("jdx = ", jdx, "= ", particles[jdx].position);     //skriv ut jdx
-    	relativePosition.subVectors(particles[idx].position, particles[jdx].position);
-	 		//console.log(relativePosition);
+			//console.log("idx = ", idx, "= ", particles[idx].position);	 //skriv ut idx
+			//console.log("jdx = ", jdx, "= ", particles[jdx].position);     //skriv ut jdx
+			relativePosition.subVectors(particles[idx].position, particles[jdx].position);
+			//console.log(relativePosition);
 
-	 		//Calculate particle j's pressure force on i
-	 		var jPressure = (particles[jdx].density - parameters.restDensity) * parameters.gasConstantK;
-	 		//pressureForce = pressureForce - parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
-	 		pressureForce.addScalar(-parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
-	 		
-	 		//Calculate particle j's viscosity force on i
-    	//viscosityForce = viscosityForce + parameters.viscosityConstant * parameters.mass * ((particles[jdx].velocity - particles[idx].velocity)/particles[jdx].density) * laplacianWviscosity(relativePosition, parameters.kernelSize);
-    	tempVec.subVectors( particles[jdx].velocity, particles[idx].velocity );
-    	tempVec.divideScalar( particles[jdx].density );
-    	tempVec.multiplyScalar( parameters.viscosityConstant * parameters.mass * laplacianWviscosity(relativePosition, parameters.kernelSize) );
+			//Calculate particle j's pressure force on i
+			var jPressure = (particles[jdx].density - parameters.restDensity) * parameters.gasConstantK;
+			//pressureForce = pressureForce - parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
+			pressureForce.addScalar(-parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
 
-    	viscosityForce.add(tempVec);
-    	//console.log(viscosityForce);
+			//Calculate particle j's viscosity force on i
+			//viscosityForce = viscosityForce + parameters.viscosityConstant * parameters.mass * ((particles[jdx].velocity - particles[idx].velocity)/particles[jdx].density) * laplacianWviscosity(relativePosition, parameters.kernelSize);
+			tempVec.subVectors( particles[jdx].velocity, particles[idx].velocity );
+			tempVec.divideScalar( particles[jdx].density );
+			tempVec.multiplyScalar( parameters.viscosityConstant * parameters.mass * laplacianWviscosity(relativePosition, parameters.kernelSize) );
 
-    	//Calculate "color" for particle j
-    	cs += parameters.mass * (1 / particles[jdx].density) * Wpoly6(relativePosition, parameters.kernelSize);
-   		//Calculate gradient of "color" for particle j
-   		//n += parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize);
-   		n.addScalar(parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize) );
-      	//Calculate laplacian of "color" for particle j
-      	laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
-    }
+			viscosityForce.add(tempVec);
+			//console.log(viscosityForce);
 
-      if (n.normalize() < parameters.nThreshold){
-      	tensionForce = new THREE.Vector3(0, 0, 0);
-      }
-      else{
-      	var k = n.normalize().divideScalar(-laplacianCs);
-      	tempVec.multiplyVectors(k,n);
-      	tensionForce = tempVec.multiplyScalar( parameters.sigma );
-  		}
-	    //Add any external forces on particle i
-	    var externalForce = parameters.gravity;
-	    //particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
-	    tempVec.addVectors(pressureForce, viscosityForce);
-	    
-	    //console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet 
-	    //console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
-	    
-	    tempVec2.addVectors(tensionForce, externalForce);
-	    //console.log("tempVec2: ", tempVec2);		//inte NaN
-	    tempVec3.addVectors(tempVec, tempVec2);
-	    //console.log("tempVec3: ", tempVec3);		//inte NaN
-	    particles[idx].force = tempVec3;
-	    //console.log("force: ",idx,": ", particles[idx].force);
-	  }
+			//Calculate "color" for particle j
+			cs += parameters.mass * (1 / particles[jdx].density) * Wpoly6(relativePosition, parameters.kernelSize);
+			//Calculate gradient of "color" for particle j
+			//n += parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize);
+			n.addScalar(parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize) );
+			//Calculate laplacian of "color" for particle j
+			laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
+		}
+
+		if (n.normalize() < parameters.nThreshold){
+			tensionForce = new THREE.Vector3(0, 0, 0);
+		}
+		else{
+			var k = n.normalize().divideScalar(-laplacianCs);
+			tempVec.multiplyVectors(k,n);
+			tensionForce = tempVec.multiplyScalar( parameters.sigma );
+		}
+		//Add any external forces on particle i
+		var externalForce = parameters.gravity;
+		//particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
+		tempVec.addVectors(pressureForce, viscosityForce);
+
+		//console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet
+		//console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
+
+		tempVec2.addVectors(tensionForce, externalForce);
+		//console.log("tempVec2: ", tempVec2);		//inte NaN
+		tempVec3.addVectors(tempVec, tempVec2);
+		//console.log("tempVec3: ", tempVec3);		//inte NaN
+		particles[idx].force = tempVec3;
+		//console.log("force: ",idx,": ", particles[idx].force);
 	}
+}
 
 //Euler time step
 function performTimestep(){
 	for(idx = 0; idx < particles.length; idx++){
 		//Perform acceleration integration to receive velocity
-    var tempVec = new THREE.Vector3();		//!! declare new vector
-    var tempVec1 = new THREE.Vector3();
+		var tempVec = new THREE.Vector3();		//!! declare new vector
+		var tempVec1 = new THREE.Vector3();
 
-    //vektorer: particles[idx].velocuty, particles[idx].force
-    //skalärer: velocity, particles[idx].density, dt
-    //particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
-    //
-    //% Perform acceleration integration to receive velocity
-    // velocity = particles(k).velocity;
-    
-    // particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
-    
-    // % Perform velocity integration to receive position
-    // position = particles(k).position;
-    
-    // position = position + particles(k).velocity * dt;
-    // particles(k).position = position;
-    
-    // Perform acceleration integration to receive velocity
-    tempVec = particles[idx].force;
-    tempVec.divideScalar(particles[idx].density);
-    tempVec.multiplyScalar(parameters.dt);
-    tempVec.add(particles[idx].velocity);
-    
-    particles[idx].velocity = tempVec;
+		//vektorer: particles[idx].velocuty, particles[idx].force
+		//skalärer: velocity, particles[idx].density, dt
+		//particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
+		//
+		//% Perform acceleration integration to receive velocity
+		// velocity = particles(k).velocity;
 
-    // Perform velocity integration to receive position
-    tempVec1 = particles[idx].velocity;
-    tempVec1.multiplyScalar(parameters.dt);
+		// particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
 
-    particles[idx].position.add(tempVec1);
-  }
+		// % Perform velocity integration to receive position
+		// position = particles(k).position;
+
+		// position = position + particles(k).velocity * dt;
+		// particles(k).position = position;
+
+		// Perform acceleration integration to receive velocity
+		tempVec = particles[idx].force;
+		tempVec.divideScalar(particles[idx].density);
+		tempVec.multiplyScalar(parameters.dt);
+		tempVec.add(particles[idx].velocity);
+
+		particles[idx].velocity = tempVec;
+
+		// Perform velocity integration to receive position
+		tempVec1 = particles[idx].velocity;
+		tempVec1.multiplyScalar(parameters.dt);
+
+		particles[idx].position.add(tempVec1);
+	}
 }
 
 function checkBoundaries(){
@@ -299,14 +297,15 @@ function checkBoundaries(){
 		// 
 		if(particles[idx].position.y < parameters.bottomBound){
 			particles[idx].position.y = 0.05;
+			particles[idx].velocity.y = 0;
 		}
-    //console.log("After boundary check:  ",idx,": ", particles[idx].position);
+		//console.log("After boundary check:  ",idx,": ", particles[idx].position);
 	}
-} 
+}
 
 /*
-** KERNELS
-**/
+ ** KERNELS
+ **/
 //SMOOTHING KERNEL
 function Wpoly6(r, h){
 	var radius = r;
@@ -314,7 +313,7 @@ function Wpoly6(r, h){
 	var w = 0;
 
 	if (radius.x < h && radius.y < h && radius.z < h){
-		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius.x^2)^3 + (h^2 - radius.y^2)^3 +(h^2 - radius.z^2)^3); 
+		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius.x^2)^3 + (h^2 - radius.y^2)^3 +(h^2 - radius.z^2)^3);
 	}
 	return w;
 }
@@ -323,9 +322,9 @@ function Wpoly6(r, h){
 function gradWspiky(r, h){
 	var radius = r.normalize();
 	var w = 0;
-	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radius.z)^3);
-	}
+	//if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
+	//	w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radius.z)^3);
+	//}
 	//console.log("w: ", w);
 	return w;	//? ska den returna? ja
 }
@@ -358,7 +357,7 @@ function laplacianWpoly6(r, h){
 	var radius = r.normalize();
 	var laplacian = 0;
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) * 
+		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) *
 			((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))
 			- 6 * ((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))^2);
 	}
@@ -366,34 +365,34 @@ function laplacianWpoly6(r, h){
 }
 
 function buildAxes( length ) {
-  var axes = new THREE.Object3D();
+	var axes = new THREE.Object3D();
 
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( length, 0, 0 ), 0xFF0000, false ) ); // +X
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -length, 0, 0 ), 0xFF0000, true) ); // -X
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, length, 0 ), 0x00FF00, false ) ); // +Y
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -length, 0 ), 0x00FF00, true ) ); // -Y
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, length ), 0x0000FF, false ) ); // +Z
-  axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -length ), 0x0000FF, true ) ); // -Z
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( length, 0, 0 ), 0xFF0000, false ) ); // +X
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -length, 0, 0 ), 0xFF0000, true) ); // -X
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, length, 0 ), 0x00FF00, false ) ); // +Y
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -length, 0 ), 0x00FF00, true ) ); // -Y
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, length ), 0x0000FF, false ) ); // +Z
+	axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -length ), 0x0000FF, true ) ); // -Z
 
-  return axes;
+	return axes;
 }
 
 function buildAxis( src, dst, colorHex, dashed ) {
-        var geom = new THREE.Geometry(),
-            mat; 
+	var geom = new THREE.Geometry(),
+		mat;
 
-        if(dashed) {
-                mat = new THREE.LineDashedMaterial({ linewidth: 2, color: colorHex, dashSize: 2, gapSize: 0.5 });
-        } else {
-                mat = new THREE.LineBasicMaterial({ linewidth: 2, color: colorHex });
-        }
+	if(dashed) {
+		mat = new THREE.LineDashedMaterial({ linewidth: 2, color: colorHex, dashSize: 2, gapSize: 0.5 });
+	} else {
+		mat = new THREE.LineBasicMaterial({ linewidth: 2, color: colorHex });
+	}
 
-        geom.vertices.push( src.clone() );
-        geom.vertices.push( dst.clone() );
-        geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
+	geom.vertices.push( src.clone() );
+	geom.vertices.push( dst.clone() );
+	geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
 
-        var axis = new THREE.Line( geom, mat, THREE.LinePieces );
+	var axis = new THREE.Line( geom, mat, THREE.LinePieces );
 
-        return axis;
+	return axis;
 
 }
