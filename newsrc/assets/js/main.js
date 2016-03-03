@@ -5,6 +5,7 @@ var particles = [];
 var parameters;
 var colors = [];	//new variable for the colors for the particles
 var sizeOfParticle = 0.1;
+
 /*
  ** CONSTRUCTORS
  */
@@ -33,23 +34,19 @@ var structParameters = function(){
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
 	this.leftBound = -2;
 	this.rightBound = 2;
-	this.bottomBound = 0.05;
+	this.bottomBound = 0.1;
 	this.topBound = 2;
 	this.wallDamper = 0.005;
 	this.nmbrOfParticles = 100;
 	this.makePar = function makeParticles(){
 		for(var idx = 0; idx < parameters.nmbrOfParticles; idx++){
 			particles[idx] = new structParticle();
-			particles[idx].position = new THREE.Vector3(Math.random(), Math.random()+0.05, Math.random());
+			particles[idx].position = new THREE.Vector3(Math.random(), Math.random()*2+1, Math.random());
 			particles[idx].density = 1602;  //DENSITY OF SAND
 			particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
+			particles[idx].receiveShadows = true;	
+			particles[idx].castShadow = true;
 			scene.add( particles[idx].displayedParticle );
-
-			// -----------  RANDOM COLORS FOR THE PARTICLES -----------------
-			// instead of this in struct: this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
-	        colors[idx] = new THREE.Color();
-	        colors[idx].setHSL( Math.random(), 1.0, 0.5 );		//randomize the color
-	        particles.mat = new THREE.MeshBasicMaterial({color: colors[idx]});  	
 		}
 	}
 };
@@ -80,6 +77,8 @@ function init() {
 	var planeMaterial = new THREE.MeshBasicMaterial( {color: 0x189138, side: THREE.DoubleSide} );
 	var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 	planeMesh.rotation.x = 1.57;
+	planeMesh.castShadow = false;
+	planeMesh.receiveShadows = true;
 	scene.add( planeMesh );
 
 
@@ -90,11 +89,18 @@ function init() {
 	scene.add( axes );
 
 	// LIGHTS
-	var light = new THREE.DirectionalLight( 0xaabbff, 0.3 );
-	light.position.x = 300;
-	light.position.y = 250;
-	light.position.z = -500;
+	var light = new THREE.DirectionalLight( 0xaabbff, 0. );
+	light.position.x = 100;
+	light.position.y = 100;
+	light.position.z = -100;
+	light.castShadow = true;
+	light.shadowDarkness = 0;
+					light.shadowCameraNear = 1200;
+				light.shadowCameraFar = 2500;
+				light.shadowCameraFov = 50;
 	scene.add( light );
+
+
 
 	// SKYDOME
 	var vertexShader = document.getElementById( 'vertexShader' ).textContent;
@@ -415,7 +421,7 @@ window.onload = function(){
 	gui.add(parameters, 'dt', 1/30, 1).name('Step Size');
 	gui.add(parameters, 'mass',0.1, 100);
 	gui.add(parameters, 'kernelSize',0.1, 1);
-	gui.add(parameters, 'bottomBound', -5, 5);
+	gui.add(parameters, 'bottomBound', parameters.bottomBound, 5);
 	//this one doesnt work:
 	gui.add(parameters, 'nmbrOfParticles', 10, 300).step(1).name('Number of particles');
 	gui.add(parameters, 'gasConstantK', 0,2 );
@@ -425,6 +431,7 @@ window.onload = function(){
 	gui.add(parameters, 'nThreshold',0 ,1 );
 	//gui.add(parameters, 'gravity.y',-20 , 0 );
 	gui.add(parameters, 'wallDamper', 0,1 );
-	gui.add(parameters, 'makePar').name('Make more Particles');
+	gui.add(parameters, 'makePar').name('Make more Particles'); //Stops doing calculations on old ones
+
 	//NEED A BUTTON TO REDO MAKEPARTICLES()
 };
