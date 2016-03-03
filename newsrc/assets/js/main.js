@@ -15,39 +15,54 @@ var structParticle = function(){
 	this.pressure = 0;
 	this.force = new THREE.Vector3(0, 0, 0);
 	this.cs = 0;
-	this.geo = new THREE.SphereGeometry( 0.05, 4, 4 );
+	this.geo = new THREE.SphereGeometry( 0.5, 10, 10 );
 	//this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
 	this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
 }
 
 var structParameters = function(){
-	this.dt = 0.2;
-	this.mass = 1;
+	this.dt = 0.9;
+	this.mass = 10;
 	this.kernelSize = 0.2;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 50;
-	this.restDensity = 30;
+	this.viscosityConstant = 10;
+	this.restDensity = 0;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
-	this.leftBound = -2;
-	this.rightBound = 2;
-	this.bottomBound = 0.05;
-	this.topBound = 2;
+	this.leftBound = -2*10;
+	this.rightBound = 2*10;
+	this.bottomBound = 0.05*10;
+	this.topBound = 2*10;
 	this.wallDamper = 0.005;
 }
+
+
+	window.onload = function(){
+		//Setup GUI
+		var para = new structParameters();
+		var part = new structParticle();
+		var gui = new DAT.GUI();
+		gui.add(para, 'dt', 1/30, 1).listen();
+		gui.add(para, 'mass',0.1, 100).listen();
+		gui.add(para, 'kernelSize',0.1, 1).listen();
+		gui.add(para, 'bottomBound', -10, 0).listen();
+
+		update = function(){
+			requestAnimationFrame(update);
+			console.log('update');
+		};
+		update()
+	};
 
 init();
 animate();
 function init() {
-	//Setup GUI
-	gui = new DAT.GUI({ height: 3*32-1});
-	gui.add({blocks: 50}, 'blocks', 0, 100);
 
 	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-	camera.position.set( 0, 0, 5 );
+	camera.position.set( 0, 0, 50 );
 
 	//Setup the scene
 	scene = new THREE.Scene();
@@ -57,19 +72,19 @@ function init() {
 	// controls.maxPolarAngle = 0.9 * Math.PI / 2; //begränsar kamerarörelsen
 	controls.enableZoom = false;
 
-	var planeGeometry = new THREE.PlaneGeometry( 5, 5, 5 );
+	var planeGeometry = new THREE.PlaneGeometry( 500, 500, 500 );
 	var planeMaterial = new THREE.MeshBasicMaterial( {color: 0x189138, side: THREE.DoubleSide} );
 	var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 	planeMesh.rotation.x = 1.57;
 	scene.add( planeMesh );
 
-	var nmbrOfParticles = 40;
+	var nmbrOfParticles = 100;
 
 	parameters = new structParameters();
 
 	for(var idx = 0; idx < nmbrOfParticles; idx++){
 		particles[idx] = new structParticle();
-		particles[idx].position = new THREE.Vector3(Math.random(), Math.random()+0.05, Math.random());
+		particles[idx].position = new THREE.Vector3(Math.random()*10, Math.random()*10+0.05, Math.random()*10);
 		particles[idx].density = 1602;  //DENSITY OF SAND
 		particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
 		scene.add( particles[idx].displayedParticle );
@@ -137,6 +152,7 @@ function onWindowResize() {
 }
 
 function animate(){
+
 	for(var idx = 0; idx < particles.length; idx++){
 		//console.log( "Position ",idx,": ",particles[idx].position );
 		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
@@ -158,11 +174,12 @@ function animate(){
 		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
 	//console.log("---------------")
-
+	update();
 	render();
 }
 
 function render(){
+	update();
 	var delta = clock.getDelta();
 	renderer.render( scene, camera );
 }
@@ -353,7 +370,7 @@ function gradWpoly6(r, h){
 	var radius = r.normalize();
 	var gradient = 0
 
-	console.log("----Y----:", radius.y);
+	//console.log("----Y----:", radius.y);
 
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		gradient = - ((315/(64*Math.pi*h^9)) * 6 * ((h^2 - radius.x^2)^2 + (h^2 - radius.y^2)^2 +(h^2 - radius.z^2)^2)) * r;
