@@ -4,7 +4,7 @@ var clock = new THREE.Clock();
 var particles = [];
 var parameters;
 var colors = [];	//new variable for the colors for the particles
-
+var sizeOfParticle = 0.1;
 /*
  ** CONSTRUCTORS
  */
@@ -15,14 +15,15 @@ var structParticle = function(){
 	this.pressure = 0;
 	this.force = new THREE.Vector3(0, 0, 0);
 	this.cs = 0;
-	this.geo = new THREE.SphereGeometry( 0.5, 10, 10 );
+	this.geo = new THREE.SphereGeometry( sizeOfParticle, 10, 10 );
 	//this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
 	this.displayedParticle = new THREE.Mesh( this.geo, this.mat );
-}
+
+};
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 10;
+	this.mass = 100;
 	this.kernelSize = 0.2;
 	this.gasConstantK = 1;
 	this.viscosityConstant = 10;
@@ -30,39 +31,42 @@ var structParameters = function(){
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
-	this.leftBound = -2*10;
-	this.rightBound = 2*10;
-	this.bottomBound = 0.05*10;
-	this.topBound = 2*10;
+	this.leftBound = -2;
+	this.rightBound = 2;
+	this.bottomBound = 0.05;
+	this.topBound = 2;
 	this.wallDamper = 0.005;
-}
+	this.nmbrOfParticles = 100;
+	this.makePar = function makeParticles(){
+		for(var idx = 0; idx < parameters.nmbrOfParticles; idx++){
+			particles[idx] = new structParticle();
+			particles[idx].position = new THREE.Vector3(Math.random(), Math.random()+0.05, Math.random());
+			particles[idx].density = 1602;  //DENSITY OF SAND
+			particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
+			scene.add( particles[idx].displayedParticle );
+
+			// -----------  RANDOM COLORS FOR THE PARTICLES -----------------
+			// instead of this in struct: this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
+	        colors[idx] = new THREE.Color();
+	        colors[idx].setHSL( Math.random(), 1.0, 0.5 );		//randomize the color
+	        particles.mat = new THREE.MeshBasicMaterial({color: colors[idx]});  	
+		}
+	}
+};
 
 
-	window.onload = function(){
-		//Setup GUI
-		var para = new structParameters();
-		var part = new structParticle();
-		var gui = new DAT.GUI();
-		gui.add(para, 'dt', 1/30, 1).listen();
-		gui.add(para, 'mass',0.1, 100).listen();
-		gui.add(para, 'kernelSize',0.1, 1).listen();
-		gui.add(para, 'bottomBound', -10, 0).listen();
-
-		update = function(){
-			requestAnimationFrame(update);
-			console.log('update');
-		};
-		update()
-	};
 
 init();
 animate();
 function init() {
 
+
+
+
 	//Setup camera
 	container = document.getElementById( 'container' );
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 5000 );
-	camera.position.set( 0, 0, 50 );
+	camera.position.set( 0, 0, 5 );
 
 	//Setup the scene
 	scene = new THREE.Scene();
@@ -72,32 +76,16 @@ function init() {
 	// controls.maxPolarAngle = 0.9 * Math.PI / 2; //begränsar kamerarörelsen
 	controls.enableZoom = false;
 
-	var planeGeometry = new THREE.PlaneGeometry( 500, 500, 500 );
+	var planeGeometry = new THREE.PlaneGeometry( 50, 50, 50 );
 	var planeMaterial = new THREE.MeshBasicMaterial( {color: 0x189138, side: THREE.DoubleSide} );
 	var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 	planeMesh.rotation.x = 1.57;
 	scene.add( planeMesh );
 
-	var nmbrOfParticles = 100;
+
 
 	parameters = new structParameters();
-
-	for(var idx = 0; idx < nmbrOfParticles; idx++){
-		particles[idx] = new structParticle();
-		particles[idx].position = new THREE.Vector3(Math.random()*10, Math.random()*10+0.05, Math.random()*10);
-		particles[idx].density = 1602;  //DENSITY OF SAND
-		particles[idx].displayedParticle.position.set( particles[idx].position.x, particles[idx].position.y, particles[idx].position.z );
-		scene.add( particles[idx].displayedParticle );
-
-		// -----------  RANDOM COLORS FOR THE PARTICLES -----------------
-		// instead of this in struct: this.mat = new THREE.MeshBasicMaterial( {color: 0xCE6F22} );
-        colors[idx] = new THREE.Color();
-        colors[idx].setHSL( Math.random(), 1.0, 0.5 );		//randomize the color
-        particles.mat = new THREE.MeshBasicMaterial({color: colors[idx]});  	
-	}
-
-
-
+	parameters.makePar();
 	axes = buildAxes(100);
 	scene.add( axes );
 
@@ -152,7 +140,7 @@ function onWindowResize() {
 }
 
 function animate(){
-
+	
 	for(var idx = 0; idx < particles.length; idx++){
 		//console.log( "Position ",idx,": ",particles[idx].position );
 		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
@@ -160,7 +148,6 @@ function animate(){
 	requestAnimationFrame( animate );
 	calculateForces();
 	performTimestep();
-
 	for(var idx = 0; idx < particles.length; idx++){
 		particles[idx].displayedParticle.position.setX(particles[idx].position.x);
 		particles[idx].displayedParticle.position.setY(particles[idx].position.y);
@@ -174,12 +161,11 @@ function animate(){
 		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
 	}
 	//console.log("---------------")
-	update();
+	
 	render();
 }
 
 function render(){
-	update();
 	var delta = clock.getDelta();
 	renderer.render( scene, camera );
 }
@@ -272,7 +258,6 @@ function performTimestep(){
 		//Perform acceleration integration to receive velocity
 		var tempVec = new THREE.Vector3();		//!! declare new vector
 		var tempVec1 = new THREE.Vector3();
-
 		//vektorer: particles[idx].velocuty, particles[idx].force
 		//skalärer: velocity, particles[idx].density, dt
 		//particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
@@ -322,8 +307,9 @@ function checkBoundaries(){
 		// }
 		// 
 		if(particles[idx].position.y < parameters.bottomBound){
-			particles[idx].position.y = 0.05;
+			particles[idx].position.y = parameters.bottomBound;
 			particles[idx].velocity.y = 0;
+			//console.log(particles[idx].velocity.y)
 		}
 		//console.log("After boundary check:  ",idx,": ", particles[idx].position);
 	}
@@ -417,8 +403,28 @@ function buildAxis( src, dst, colorHex, dashed ) {
 	geom.vertices.push( dst.clone() );
 	geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
 
-	var axis = new THREE.Line( geom, mat, THREE.LinePieces );
+	var axis = new THREE.Line( geom, mat, THREE.LineSegments );
 
 	return axis;
 
 }
+
+window.onload = function(){
+		//Setup GUI
+	var gui = new DAT.GUI();
+	gui.add(parameters, 'dt', 1/30, 1).name('Step Size');
+	gui.add(parameters, 'mass',0.1, 100);
+	gui.add(parameters, 'kernelSize',0.1, 1);
+	gui.add(parameters, 'bottomBound', -5, 5);
+	//this one doesnt work:
+	gui.add(parameters, 'nmbrOfParticles', 10, 300).step(1).name('Number of particles');
+	gui.add(parameters, 'gasConstantK', 0,2 );
+	gui.add(parameters, 'viscosityConstant', 0,30 );
+	gui.add(parameters, 'restDensity',0 ,1 );
+	gui.add(parameters, 'sigma',0 ,0.1 );
+	gui.add(parameters, 'nThreshold',0 ,1 );
+	//gui.add(parameters, 'gravity.y',-20 , 0 );
+	gui.add(parameters, 'wallDamper', 0,1 );
+	gui.add(parameters, 'makePar').name('Make more Particles');
+	//NEED A BUTTON TO REDO MAKEPARTICLES()
+};
