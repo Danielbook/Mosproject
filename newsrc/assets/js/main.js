@@ -23,11 +23,11 @@ var structParticle = function(){
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 100;
-	this.kernelSize = 0.2;
+	this.mass = 0.8;
+	this.kernelSize = 0.5;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 10;
-	this.restDensity = 0;
+	this.viscosityConstant = 30;
+	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
@@ -35,7 +35,7 @@ var structParameters = function(){
 	this.rightBound = 2;
 	this.bottomBound = 0.1;
 	this.topBound = 2;
-	this.wallDamper = 0.005;
+	this.wallDamper = 5;
 	this.nmbrOfParticles = 100;
 	this.makePar = function makeParticles(){
 		for(var idx = 0; idx < parameters.nmbrOfParticles; idx++){
@@ -75,7 +75,7 @@ function init() {
 	scene.add( planeMesh );
 
 	parameters = new structParameters();
-	parameters.makePar();
+	//parameters.makePar();
 	axes = buildAxes(100);
 	scene.add( axes );
 
@@ -175,7 +175,7 @@ function calculateForces() {
 		var density = 0;
 		for(jdx = 0; jdx < particles.length; jdx++){
 			relativePosition.subVectors( particles[idx].position, particles[jdx].position );
-			var gradient = Wpoly6( relativePosition, parameters.kernelSize )
+			var gradient = Wpoly6( relativePosition, parameters.kernelSize );
 			density += parameters.mass * gradient;
 		}
 		particles[idx].density = density;
@@ -314,13 +314,15 @@ function checkBoundaries() {
  **/
 //SMOOTHING KERNEL
 function Wpoly6(r, h) {
-	var radius = r;
-	radius.normalize();
+	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var w = 0;
+	//console.log("radius = ", radius);
+	if (radius < h && radius >= 0){
+		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius^2)^3);
 
-	if (radius.x < h && radius.y < h && radius.z < h){
-		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius.x^2)^3 + (h^2 - radius.y^2)^3 +(h^2 - radius.z^2)^3);
+
 	}
+	console.log("w = ", w);
 	return w;
 }
 
@@ -347,7 +349,7 @@ function laplacianWviscosity(r, h) {
 
 //Used for surface normal (n)
 function gradWpoly6(r, h) {
-	var radius = r.normalize();
+	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var gradient = 0;
 
 	//console.log("----Y----:", radius.y);
@@ -360,7 +362,7 @@ function gradWpoly6(r, h) {
 
 //Used for curvatore of surface (k(cs))
 function laplacianWpoly6(r, h) {
-	var radius = r.normalize();
+	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var laplacian = 0;
 	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
 		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) *
