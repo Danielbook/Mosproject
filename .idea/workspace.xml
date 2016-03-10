@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6e604093-e7fb-4e1d-8ca0-e5cb01e9711a" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/newsrc/assets/js/main.js" afterPath="$PROJECT_DIR$/newsrc/assets/js/main.js" />
     </list>
     <ignored path="Mosproject.iws" />
@@ -37,8 +36,8 @@
       <file leaf-file-name="main.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/newsrc/assets/js/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.462">
-              <caret line="368" column="30" selection-start-line="368" selection-start-column="30" selection-end-line="368" selection-end-column="30" />
+            <state vertical-scroll-proportion="-0.47568712">
+              <caret line="368" column="36" selection-start-line="368" selection-start-column="36" selection-end-line="368" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -344,8 +343,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/newsrc/assets/js/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.462">
-          <caret line="368" column="30" selection-start-line="368" selection-start-column="30" selection-end-line="368" selection-end-column="30" />
+        <state vertical-scroll-proportion="-0.47568712">
+          <caret line="368" column="36" selection-start-line="368" selection-start-column="36" selection-end-line="368" selection-end-column="36" />
           <folding />
         </state>
       </provider>

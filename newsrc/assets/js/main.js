@@ -176,7 +176,7 @@ function calculateForces() {
 		for(var jdx = 0; jdx < particles.length; jdx++){
 			var relativePosition = new THREE.Vector3(particles[idx].position.x - particles[jdx].position.x, particles[idx].position.y - particles[jdx].position.y, particles[idx].position.z - particles[jdx].position.z );
 			//console.log("relativePosition1 : ", relativePosition);
-			relativePosition = Math.sqrt((relativePosition.x^2) + (relativePosition.y^2) + (relativePosition.z^2));
+			//relativePosition = Math.sqrt((relativePosition.x^2) + (relativePosition.y^2) + (relativePosition.z^2));
 			//console.log("relativePosition2 : ", relativePosition);
 
 			var gradient = Wpoly6( relativePosition, parameters.kernelSize );
@@ -383,7 +383,7 @@ function Wpoly6(r, h) {
 
 //SMOOTHING KERNEL
 function gradWspiky(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
 
 
 	var w = new THREE.Vector3(0, 0, 0);
@@ -398,7 +398,7 @@ function gradWspiky(r, h) {
 
 //Used for Viscosity force
 function laplacianWviscosity(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
 	var laplacian = 2;
 	if (relativeRadius < h && relativeRadius >= 0){
 		laplacian = (45 / (Math.pi * h^6)) * (h-relativeRadius);
@@ -408,7 +408,7 @@ function laplacianWviscosity(r, h) {
 
 //Used for surface normal (n)
 function gradWpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
 	var gradient = 0;
 	var newR = THREE.Vector3(0, 0, 0);
 	//console.log("----Y----:", radius.y);
@@ -422,7 +422,7 @@ function gradWpoly6(r, h) {
 
 //Used for curvatore of surface (k(cs))
 function laplacianWpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
 	var laplacian = 0;
 
 	if (relativeRadius < h && relativeRadius >= 0){
