@@ -40,7 +40,7 @@ var structParameters = function(){
 	this.makePar = function makeParticles(){
 		for(var idx = 0; idx < parameters.nmbrOfParticles; idx++){
       var newParticle = new structParticle();
-      newParticle.position = new THREE.Vector3(Math.random(), Math.random()*2+1, Math.random());
+      newParticle.position = new THREE.Vector3(Math.random(), Math.random(), Math.random());
       newParticle.density = 1602;  //DENSITY OF SAND
       newParticle.displayedParticle.position.set( newParticle.position.x, newParticle.position.y, newParticle.position.z );
       newParticle.receiveShadows = true;
@@ -175,6 +175,9 @@ function calculateForces() {
 		var density = 1;
 		for(var jdx = 0; jdx < particles.length; jdx++){
 			var relativePosition = new THREE.Vector3(particles[idx].position.x - particles[jdx].position.x, particles[idx].position.y - particles[jdx].position.y, particles[idx].position.z - particles[jdx].position.z );
+			//console.log("relativePosition1 : ", relativePosition);
+			relativePosition = Math.sqrt((relativePosition.x^2) + (relativePosition.y^2) + (relativePosition.z^2));
+			//console.log("relativePosition2 : ", relativePosition);
 
 			var gradient = Wpoly6( relativePosition, parameters.kernelSize );
 			density += parameters.mass * gradient;
@@ -231,6 +234,8 @@ function calculateForces() {
 
 			//Calculate laplacian of "color" for particle j
 			laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
+			//console.log("laplacianCs: ", laplacianCs);
+			//console.log("laplacianwpoly6: ",laplacianWpoly6(relativePosition, parameters.kernelSize));
 		}
 
 		nNorm = Math.sqrt((n.x^2)+(n.y^2)+(n.z^2));
@@ -239,14 +244,25 @@ function calculateForces() {
 		}
 		else {
 			var k = -laplacianCs/nNorm;
+
+
+			//console.log("laplacianCs: ", laplacianCs);
+			//console.log("nNorm: ", nNorm);
+
 			tensionForce = n.multiplyScalar( k*parameters.sigma );
+
+
+			//console.log("k: ", k);
+			//console.log("parameters.sigma: ", parameters.sigma);
+
+
 		}
 		//Add any external forces on particle i
 		var externalForce = parameters.gravity;
 		//particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
+
+
 		tempVec.addVectors(pressureForce, viscosityForce);
-
-
 		tempVec2.addVectors(tensionForce, externalForce);
 		tempVec3.addVectors(tempVec, tempVec2);
 		particles[idx].force = tempVec3;
@@ -350,10 +366,12 @@ function checkBoundaries() {
  **/
 //SMOOTHING KERNEL
 function Wpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
+	console.log("relativeRadius: ", relativeRadius);
+
 		//console.log("radius: ", relativeRadius);
 	//relativeRadius = 0.4;
-	var w = 0;
+	var w = 1;
 
 
 	if (relativeRadius < h && relativeRadius >= 0){
@@ -381,7 +399,7 @@ function gradWspiky(r, h) {
 //Used for Viscosity force
 function laplacianWviscosity(r, h) {
 	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
-	var laplacian = 0;
+	var laplacian = 2;
 	if (relativeRadius < h && relativeRadius >= 0){
 		laplacian = (45 / (Math.pi * h^6)) * (h-relativeRadius);
 	}
@@ -406,6 +424,7 @@ function gradWpoly6(r, h) {
 function laplacianWpoly6(r, h) {
 	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var laplacian = 0;
+
 	if (relativeRadius < h && relativeRadius >= 0){
 		laplacian = 315/(64*Math.pi*h^9) * (24 * relativeRadius^2 * (h^2-relativeRadius^2-6) *(h^2-relativeRadius^2)^2);
 	}
