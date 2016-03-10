@@ -23,11 +23,11 @@ var structParticle = function(){
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 0.8;
+	this.mass = 2.8;
 	this.kernelSize = 0.5;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 30;
-	this.restDensity = 5;
+	this.viscosityConstant = 10;
+	this.restDensity = 0.15;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
@@ -169,12 +169,13 @@ function render() {
  */
 function calculateForces() {
 //	console.log(particles);
-	var relativePosition = new THREE.Vector3();
-	for(idx = 0; idx < particles.length; idx++){
+	//var relativePosition = new THREE.Vector3(0, 0, 0);
+	for(var idx = 0; idx < particles.length; idx++){
 		particles[idx].force = 0;
 		var density = 0;
-		for(jdx = 0; jdx < particles.length; jdx++){
-			relativePosition.subVectors( particles[idx].position, particles[jdx].position );
+		for(var jdx = 0; jdx < particles.length; jdx++){
+			var relativePosition = new THREE.Vector3(particles[idx].position.x - particles[jdx].position.x, particles[idx].position.y - particles[jdx].position.y, particles[idx].position.z - particles[jdx].position.z );
+
 			var gradient = Wpoly6( relativePosition, parameters.kernelSize );
 			density += parameters.mass * gradient;
 		}
@@ -189,6 +190,9 @@ function calculateForces() {
 		var tempVec = new THREE.Vector3(0, 0, 0);
 		var tempVec2 = new THREE.Vector3(0, 0, 0);
 		var tempVec3 = new THREE.Vector3(0, 0, 0);
+		var tempVec4 = new THREE.Vector3(0, 0, 0);
+		var tempVec5 = new THREE.Vector3(0, 0, 0);
+		var tempScalar = 0;
 		var pressureForce = new THREE.Vector3(0, 0, 0);
 		var tensionForce = new THREE.Vector3(0, 0, 0);
 		var viscosityForce = new THREE.Vector3(0, 0, 0);
@@ -201,8 +205,10 @@ function calculateForces() {
 			//Calculate particle j's pressure force on i
 			var jPressure = (particles[jdx].density - parameters.restDensity) * parameters.gasConstantK;
 			//pressureForce = pressureForce - parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
-			pressureForce.addScalar(-parameters.mass * ((iPressure + jPressure)/(2*particles[jdx].density)) * gradWspiky(relativePosition, parameters.kernelSize) );
+			tempVec4 = gradWspiky(relativePosition,parameters.kernelSize);
+			tempVec4 = tempVec4.multiplyScalar(-parameters.mass*(iPressure + jPressure)/(2*particles[jdx].density));
 
+			pressureForce.subVectors(pressureForce, tempVec4);
 			//Calculate particle j's viscosity force on i
 			//viscosityForce = viscosityForce + parameters.viscosityConstant * parameters.mass * ((particles[jdx].velocity - particles[idx].velocity)/particles[jdx].density) * laplacianWviscosity(relativePosition, parameters.kernelSize);
 			tempVec.subVectors( particles[jdx].velocity, particles[idx].velocity );
@@ -216,18 +222,24 @@ function calculateForces() {
 			cs += parameters.mass * (1 / particles[jdx].density) * Wpoly6(relativePosition, parameters.kernelSize);
 			//Calculate gradient of "color" for particle j
 			//n += parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize);
-			n.addScalar(parameters.mass * (1 / particles[jdx].density) * gradWpoly6(relativePosition, parameters.kernelSize) );
+
+			tempVec5 = gradWpoly6(relativePosition, parameters.kernelSize);
+			tempScalar = (parameters.mass * (1/particles[jdx].density));
+			var tempVec6 = new THREE.Vector3(tempVec5.x*tempScalar,tempVec5.y*tempScalar, tempVec5.z*tempScalar);
+
+			n.add(tempVec6);
+
 			//Calculate laplacian of "color" for particle j
 			laplacianCs = laplacianCs + parameters.mass * (1 / particles[jdx].density) * laplacianWpoly6(relativePosition, parameters.kernelSize);
 		}
 
-		if (n.normalize() < parameters.nThreshold) {
+		nNorm = Math.sqrt((n.x^2)+(n.y^2)+(n.z^2));
+		if ( nNorm < parameters.nThreshold) {
 			tensionForce = new THREE.Vector3(0, 0, 0);
 		}
 		else {
-			var k = n.normalize().divideScalar(-laplacianCs);
-			tempVec.multiplyVectors(k,n);
-			tensionForce = tempVec.multiplyScalar( parameters.sigma );
+			var k = -laplacianCs/nNorm;
+			tensionForce = n.multiplyScalar( k*parameters.sigma );
 		}
 		//Add any external forces on particle i
 		var externalForce = parameters.gravity;
@@ -242,7 +254,9 @@ function calculateForces() {
 		tempVec3.addVectors(tempVec, tempVec2);
 		//console.log("tempVec3: ", tempVec3);		//inte NaN
 		particles[idx].force = tempVec3;
-		//console.log("force: ",idx,": ", particles[idx].force);
+		console.log("tempvec: ",tempVec);
+		console.log("tempvec2: ",tempVec2);
+		console.log("tempvec3: ",tempVec3);
 	}
 }
 
@@ -252,6 +266,17 @@ function performTimestep() {
 		//Perform acceleration integration to receive velocity
 		var tempVec = new THREE.Vector3();		//!! declare new vector
 		var tempVec1 = new THREE.Vector3();
+
+		var velocity = new THREE.Vector3(0,0,0);
+		var forces = new THREE.Vector3(0,0,0);
+
+
+		velocity = particles[idx].velocity;
+		forces = forces.divideScalar(particles[idx].density);
+		console.log("forces: ", forces);
+		forces = forces.multiplyScalar(parameters.dt);
+		particles[idx].velocity.addVectors(velocity, forces);
+		//console.log("particles[idx].velocity: ", particles[idx].velocity);
 		//vektorer: particles[idx].velocuty, particles[idx].force
 		//skalärer: velocity, particles[idx].density, dt
 		//particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
@@ -314,60 +339,62 @@ function checkBoundaries() {
  **/
 //SMOOTHING KERNEL
 function Wpoly6(r, h) {
-	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+		//console.log("radius: ", relativeRadius);
 	var w = 0;
 	//console.log("radius = ", radius);
-	if (radius < h && radius >= 0){
-		w = (315/(64*Math.pi*h^9)) * ((h^2 - radius^2)^3);
-
-
+	if (relativeRadius < h && relativeRadius >= 0){
+		w = (315/(64*Math.pi*h^9)) * ((h^2 - relativeRadius^2)^3);
 	}
-	console.log("w = ", w);
+	//console.log("w = ", w);
 	return w;
 }
 
 //SMOOTHING KERNEL
 function gradWspiky(r, h) {
-	var radius = r.normalize();
-	var w = 0;
-	//if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-	//	w = (15/(Math.pi*h^6)) * ((h - radius.x)^3 + (h - radius.y)^3 + (h - radius.z)^3);
-	//}
-	//console.log("w: ", w);
+	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+
+
+	var w = new THREE.Vector3(0, 0, 0);
+	var vecR = new THREE.Vector3(0, 0, 0);
+
+	if (relativeRadius < h && relativeRadius > 0){
+		vecR = (r.divideScalar(-relativeRadius));
+		w = vecR.multiplyScalar((15/(Math.pi*h^6)) * 3 * (h-relativeRadius)^2);
+	}
 	return w;	//? ska den returna? ja
 }
 
 //Used for Viscosity force
 function laplacianWviscosity(r, h) {
-	var radius = r.normalize();
+	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var laplacian = 0;
-	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		laplacian = (45 / (Math.pi * h^6)) * ((h - radius.x) + (h - radius.y) + (h - radius.z));
+	if (relativeRadius < h && relativeRadius >= 0){
+		laplacian = (45 / (Math.pi * h^6)) * (h-relativeRadius);
 	}
 	return laplacian;
 }
 
 //Used for surface normal (n)
 function gradWpoly6(r, h) {
-	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var gradient = 0;
-
+	var newR = THREE.Vector3(0, 0, 0);
 	//console.log("----Y----:", radius.y);
 
-	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		gradient = - ((315/(64*Math.pi*h^9)) * 6 * ((h^2 - radius.x^2)^2 + (h^2 - radius.y^2)^2 +(h^2 - radius.z^2)^2)) * r;
+	if (relativeRadius < h && relativeRadius >= 0){
+		newR = r.multiplyScalar((h^2 - relativeRadius^2)^2);
+		gradient =  newR.multiplyScalar((-315/(64*Math.pi*h^9)) * 6);
 	}
 	return gradient;
 }
 
 //Used for curvatore of surface (k(cs))
 function laplacianWpoly6(r, h) {
-	var radius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 	var laplacian = 0;
-	if (radius.x < h && radius.y < h && radius.z < h && radius.x >= 0 && radius.y >= 0 && radius.z >= 0){
-		laplacian = (315/(64*Math.pi*h^9)) * (24 * (radius.x^2 + radius.y^2 + radius.z^2) *
-			((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))
-			- 6 * ((h^2 - radius.x^2) + (h^2 - radius.y^2) + (h^2 - radius.z^2))^2);
+	if (relativeRadius < h && relativeRadius >= 0){
+		laplacian = 315/(64*Math.pi*h^9) * (24 * relativeRadius^2 * (h^2-relativeRadius^2-6) *(h^2-relativeRadius^2)^2);
 	}
 	return laplacian;
 }

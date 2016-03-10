@@ -4,7 +4,7 @@ function newParticles = performTimestep( particles, dt )
 
 for k = 1:length(particles)
     % Perform acceleration integration to receive velocity
-    velocity = particles(k).velocity;
+    velocity = particles(k).velocity
 
     particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
 
