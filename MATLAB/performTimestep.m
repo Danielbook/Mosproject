@@ -9,7 +9,7 @@ for k = 1:length(particles)
     particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
 
     % Perform velocity integration to receive position
-    position = particles(k).position;
+    position = particles(k).position
 
     position = position + particles(k).velocity * dt;
     particles(k).position = position;

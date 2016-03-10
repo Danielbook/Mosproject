@@ -23,11 +23,11 @@ var structParticle = function(){
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 2.8;
+	this.mass = 0.8;
 	this.kernelSize = 0.5;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 10;
-	this.restDensity = 0.15;
+	this.viscosityConstant = 30;
+	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
@@ -172,7 +172,7 @@ function calculateForces() {
 	//var relativePosition = new THREE.Vector3(0, 0, 0);
 	for(var idx = 0; idx < particles.length; idx++){
 		particles[idx].force = 0;
-		var density = 0;
+		var density = 1;
 		for(var jdx = 0; jdx < particles.length; jdx++){
 			var relativePosition = new THREE.Vector3(particles[idx].position.x - particles[jdx].position.x, particles[idx].position.y - particles[jdx].position.y, particles[idx].position.z - particles[jdx].position.z );
 
@@ -246,36 +246,47 @@ function calculateForces() {
 		//particles[idx].force = pressureForce + viscosityForce + tensionForce + externalForce;
 		tempVec.addVectors(pressureForce, viscosityForce);
 
-		//console.log("viscosity: ",idx,": ", viscosityForce);	//inte NaN första varvet
-		//console.log("pressure:  ",idx,": ", pressureForce);		//inte NaN första varvet
 
 		tempVec2.addVectors(tensionForce, externalForce);
-		//console.log("tempVec2: ", tempVec2);		//inte NaN
 		tempVec3.addVectors(tempVec, tempVec2);
-		//console.log("tempVec3: ", tempVec3);		//inte NaN
 		particles[idx].force = tempVec3;
-		console.log("tempvec: ",tempVec);
-		console.log("tempvec2: ",tempVec2);
-		console.log("tempvec3: ",tempVec3);
+
 	}
 }
 
 //Euler time step
 function performTimestep() {
-	for(idx = 0; idx < particles.length; idx++) {
+	for(var idx = 0; idx < particles.length; idx++) {
 		//Perform acceleration integration to receive velocity
 		var tempVec = new THREE.Vector3();		//!! declare new vector
 		var tempVec1 = new THREE.Vector3();
 
 		var velocity = new THREE.Vector3(0,0,0);
-		var forces = new THREE.Vector3(0,0,0);
-
+		var tempVel = new THREE.Vector3(0, 0, 0);
+		var position = new THREE.Vector3(0, 0, 0);
 
 		velocity = particles[idx].velocity;
-		forces = forces.divideScalar(particles[idx].density);
-		console.log("forces: ", forces);
-		forces = forces.multiplyScalar(parameters.dt);
-		particles[idx].velocity.addVectors(velocity, forces);
+		//console.log("forces: ", forces);
+		//console.log("velocity",particles[idx].velocity);
+		//console.log("particles[idx].density: ", particles[idx].density);
+		//console.log("particles[idx].force.y/particles[idx].density: ", particles[idx].force.y/particles[idx].density);
+		//console.log("particles[idx].force.y ", particles[idx].force.y);
+		//console.log("particles[idx].density: ", particles[idx].density);
+
+		var forces = new THREE.Vector3(particles[idx].force.x/particles[idx].density,particles[idx].force.y/particles[idx].density,particles[idx].force.z/particles[idx].density);
+		var	forces1 = new THREE.Vector3(forces.x*parameters.dt, forces.y*parameters.dt, forces.z*parameters.dt);
+		tempVel.addVectors(velocity,forces1);
+		particles[idx].velocity = velocity.add(tempVel);
+
+
+
+		var tempVel2 = new THREE.Vector3(particles[idx].velocity.x*parameters.dt, particles[idx].velocity.y*parameters.dt, particles[idx].velocity.z*parameters.dt);
+		position = particles[idx].position;
+		position = position.add(tempVel2);
+		particles[idx].position = position;
+		//particles[idx].position = position;
+
+
 		//console.log("particles[idx].velocity: ", particles[idx].velocity);
 		//vektorer: particles[idx].velocuty, particles[idx].force
 		//skalärer: velocity, particles[idx].density, dt
@@ -293,18 +304,18 @@ function performTimestep() {
 		// particles(k).position = position;
 
 		// Perform acceleration integration to receive velocity
-		tempVec = particles[idx].force;
-		tempVec.divideScalar(particles[idx].density);
-		tempVec.multiplyScalar(parameters.dt);
-		tempVec.add(particles[idx].velocity);
+//		tempVec = particles[idx].force;
+//		tempVec.divideScalar(particles[idx].density);
+//		tempVec.multiplyScalar(parameters.dt);
+//		tempVec.add(particles[idx].velocity);
 
-		particles[idx].velocity = tempVec;
+//		particles[idx].velocity = tempVec;
 
 		// Perform velocity integration to receive position
-		tempVec1 = particles[idx].velocity;
-		tempVec1.multiplyScalar(parameters.dt);
+//		tempVec1 = particles[idx].velocity;
+//		tempVec1.multiplyScalar(parameters.dt);
 
-		particles[idx].position.add(tempVec1);
+//		particles[idx].position.add(tempVec1);
 	}
 }
 
@@ -341,12 +352,14 @@ function checkBoundaries() {
 function Wpoly6(r, h) {
 	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
 		//console.log("radius: ", relativeRadius);
+	//relativeRadius = 0.4;
 	var w = 0;
-	//console.log("radius = ", radius);
+
+
 	if (relativeRadius < h && relativeRadius >= 0){
 		w = (315/(64*Math.pi*h^9)) * ((h^2 - relativeRadius^2)^3);
+		console.log("w: ", w);
 	}
-	//console.log("w = ", w);
 	return w;
 }
 
