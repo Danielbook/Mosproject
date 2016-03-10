@@ -25,14 +25,14 @@ var structParameters = function(){
 	this.dt = 0.9;
 	this.mass = 30;
 	this.kernelSize = 0.22;
-	this.gasConstantK = 2;
+	this.gasConstantK = 1;
 	this.viscosityConstant = 30;
 	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
-	this.leftBound = -2;
-	this.rightBound = 2;
+	this.leftBound = 0;
+	this.rightBound = 1;
 	this.bottomBound = 0.1;
 	this.topBound = 2;
 	this.wallDamper = 0.5;
@@ -252,6 +252,8 @@ function calculateForces() {
 		tempVec3.addVectors(tempVec, tempVec2);
 		//console.log("tempVec3: ", tempVec3);		//inte NaN
 		particles[idx].force = tempVec3;
+
+
 	}
 }
 
@@ -276,6 +278,12 @@ function performTimestep() {
 		tempVec.multiplyScalar(parameters.dt);
 
 		particles[idx].position.add(tempVec);
+
+		//Den här SKA sätta alla partiklars hastighet till 0 när de är "för" små, funkar om man sätter en lägre step size!
+		console.log("particles[idx].velocity.length()", Math.abs(particles[idx].velocity.length()));
+		if(Math.abs(particles[idx].velocity.length()) < 0.001){
+			particles[idx].velocity.multiplyScalar(particles[idx].velocity, (0.001, 0.001, 0.001));
+		}
 	}
 }
 
@@ -283,7 +291,19 @@ function checkBoundaries() {
 	for (var idx = 0; idx < particles.length; idx++) {
 		//console.log("Before boundary check:  ",idx,": ", particles[idx].position)
 
-		 
+		if (particles[idx].position.x < parameters.leftBound) {
+			particles[idx].position.x = parameters.leftBound;
+		}
+		if (particles[idx].position.x > parameters.rightBound) {
+			particles[idx].position.x = parameters.rightBound;
+		}
+		if (particles[idx].position.z < parameters.leftBound) {
+			particles[idx].position.z = parameters.leftBound;
+		}
+		if (particles[idx].position.z > parameters.rightBound) {
+			particles[idx].position.z = parameters.rightBound;
+		}
+
 		if(particles[idx].position.y < parameters.bottomBound){
 			particles[idx].position.y = parameters.bottomBound;
 			particles[idx].velocity.y = 0;
