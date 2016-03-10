@@ -23,9 +23,9 @@ var structParticle = function(){
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 0.8;
-	this.kernelSize = 0.5;
-	this.gasConstantK = 1;
+	this.mass = 30;
+	this.kernelSize = 0.22;
+	this.gasConstantK = 2;
 	this.viscosityConstant = 30;
 	this.restDensity = 30;
 	this.sigma = 0.0072;
@@ -320,7 +320,7 @@ function gradWspiky(r, h) {
 
 	if (relativeRadius < h && relativeRadius > 0){
 		vecR = (r.divideScalar(relativeRadius));
-		w = vecR.multiplyScalar((15/(Math.pi*h^6)) * 3 * (h-relativeRadius)^2);
+		w = vecR.multiplyScalar((15/(Math.pi*h^6)) * 3 * (h+relativeRadius)^2);
 	}
 	return w;	//? ska den returna? ja
 }
