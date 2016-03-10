@@ -23,11 +23,11 @@ var structParticle = function(){
 
 var structParameters = function(){
 	this.dt = 0.9;
-	this.mass = 2.8;
+	this.mass = 0.8;
 	this.kernelSize = 0.5;
 	this.gasConstantK = 1;
-	this.viscosityConstant = 10;
-	this.restDensity = 0.15;
+	this.viscosityConstant = 30;
+	this.restDensity = 30;
 	this.sigma = 0.0072;
 	this.nThreshold = 0.02;
 	this.gravity = new THREE.Vector3(0, -9.82, 0);
@@ -150,10 +150,6 @@ function animate() {
 	}
 
 	checkBoundaries();
-	for(var idx = 0; idx < particles.length; idx++){
-		//console.log( "Position ",idx,": ",particles[idx].position );
-		//console.log( "Velocity ",idx,": ", particles[idx].velocity );
-	}
 	//console.log("---------------")
 	
 	render();
@@ -172,14 +168,16 @@ function calculateForces() {
 	//var relativePosition = new THREE.Vector3(0, 0, 0);
 	for(var idx = 0; idx < particles.length; idx++){
 		particles[idx].force = 0;
-		var density = 0;
+		var density = 1;
 		for(var jdx = 0; jdx < particles.length; jdx++){
 			var relativePosition = new THREE.Vector3(particles[idx].position.x - particles[jdx].position.x, particles[idx].position.y - particles[jdx].position.y, particles[idx].position.z - particles[jdx].position.z );
 
 			var gradient = Wpoly6( relativePosition, parameters.kernelSize );
 			density += parameters.mass * gradient;
+					//console.log(gradient);
 		}
 		particles[idx].density = density;
+
 	}
 	for(idx = 0; idx < particles.length; idx++) {
 		//console.log(particles[idx].position);
@@ -254,9 +252,6 @@ function calculateForces() {
 		tempVec3.addVectors(tempVec, tempVec2);
 		//console.log("tempVec3: ", tempVec3);		//inte NaN
 		particles[idx].force = tempVec3;
-		console.log("tempvec: ",tempVec);
-		console.log("tempvec2: ",tempVec2);
-		console.log("tempvec3: ",tempVec3);
 	}
 }
 
@@ -270,29 +265,6 @@ function performTimestep() {
 		var velocity = new THREE.Vector3(0,0,0);
 		var forces = new THREE.Vector3(0,0,0);
 
-
-		velocity = particles[idx].velocity;
-		forces = forces.divideScalar(particles[idx].density);
-		console.log("forces: ", forces);
-		forces = forces.multiplyScalar(parameters.dt);
-		particles[idx].velocity.addVectors(velocity, forces);
-		//console.log("particles[idx].velocity: ", particles[idx].velocity);
-		//vektorer: particles[idx].velocuty, particles[idx].force
-		//skalärer: velocity, particles[idx].density, dt
-		//particles[idx].velocity = velocity + (particles[idx].force / particles[idx].density) * dt;
-		//
-		//% Perform acceleration integration to receive velocity
-		// velocity = particles(k).velocity;
-
-		// particles(k).velocity = velocity + (particles(k).force / particles(k).density) * dt;
-
-		// % Perform velocity integration to receive position
-		// position = particles(k).position;
-
-		// position = position + particles(k).velocity * dt;
-		// particles(k).position = position;
-
-		// Perform acceleration integration to receive velocity
 		tempVec = particles[idx].force;
 		tempVec.divideScalar(particles[idx].density);
 		tempVec.multiplyScalar(parameters.dt);
@@ -301,10 +273,9 @@ function performTimestep() {
 		particles[idx].velocity = tempVec;
 
 		// Perform velocity integration to receive position
-		tempVec1 = particles[idx].velocity;
-		tempVec1.multiplyScalar(parameters.dt);
+		tempVec.multiplyScalar(parameters.dt);
 
-		particles[idx].position.add(tempVec1);
+		particles[idx].position.add(tempVec);
 	}
 }
 
@@ -312,19 +283,7 @@ function checkBoundaries() {
 	for (var idx = 0; idx < particles.length; idx++) {
 		//console.log("Before boundary check:  ",idx,": ", particles[idx].position)
 
-		// if (particles[idx].position.x < parameters.leftBound) {
-		// 	particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
-		// }
-		// else if (particles[idx].position.x > parameters.rightBound) {
-		// 	particles[idx].velocity.setX(-0.1*particles[idx].velocity.x);
-		// }
-		// if (particles[idx].position.y < parameters.bottomBound) {
-		// 	particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
-		// }
-		// else if (particles[idx].position.y > parameters.topBound) {
-		// 	particles[idx].velocity.setY(-0.1*particles[idx].velocity.y);
-		// }
-		// 
+		 
 		if(particles[idx].position.y < parameters.bottomBound){
 			particles[idx].position.y = parameters.bottomBound;
 			particles[idx].velocity.y = 0;
@@ -339,9 +298,10 @@ function checkBoundaries() {
  **/
 //SMOOTHING KERNEL
 function Wpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
-		//console.log("radius: ", relativeRadius);
-	var w = 0;
+	var relativeRadius = r.length();
+	//var relativeRadius = Math.sqrt((r.x^2)+(r.y^2)+(r.z^2));
+	//console.log("radius: ", relativeRadius);
+	var w = 1;
 	//console.log("radius = ", radius);
 	if (relativeRadius < h && relativeRadius >= 0){
 		w = (315/(64*Math.pi*h^9)) * ((h^2 - relativeRadius^2)^3);
@@ -352,14 +312,14 @@ function Wpoly6(r, h) {
 
 //SMOOTHING KERNEL
 function gradWspiky(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
-
+	var relativeRadius = r.length();
+	//var relativeRadius = Math.sqrt((r.x^2)+(r.y^2)+(r.z^2));
 
 	var w = new THREE.Vector3(0, 0, 0);
 	var vecR = new THREE.Vector3(0, 0, 0);
 
 	if (relativeRadius < h && relativeRadius > 0){
-		vecR = (r.divideScalar(-relativeRadius));
+		vecR = (r.divideScalar(relativeRadius));
 		w = vecR.multiplyScalar((15/(Math.pi*h^6)) * 3 * (h-relativeRadius)^2);
 	}
 	return w;	//? ska den returna? ja
@@ -367,7 +327,8 @@ function gradWspiky(r, h) {
 
 //Used for Viscosity force
 function laplacianWviscosity(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
+	//var relativeRadius = Math.sqrt((r.x^2)+(r.y^2)+(r.z^2));
 	var laplacian = 0;
 	if (relativeRadius < h && relativeRadius >= 0){
 		laplacian = (45 / (Math.pi * h^6)) * (h-relativeRadius);
@@ -377,7 +338,8 @@ function laplacianWviscosity(r, h) {
 
 //Used for surface normal (n)
 function gradWpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
+	//var relativeRadius = Math.sqrt((r.x^2)+(r.y^2)+(r.z^2));
 	var gradient = 0;
 	var newR = THREE.Vector3(0, 0, 0);
 	//console.log("----Y----:", radius.y);
@@ -386,12 +348,14 @@ function gradWpoly6(r, h) {
 		newR = r.multiplyScalar((h^2 - relativeRadius^2)^2);
 		gradient =  newR.multiplyScalar((-315/(64*Math.pi*h^9)) * 6);
 	}
+	//console.log(gradient);
 	return gradient;
 }
 
 //Used for curvatore of surface (k(cs))
 function laplacianWpoly6(r, h) {
-	var relativeRadius = Math.sqrt((r.x^2) + (r.y^2) + (r.z^2));
+	var relativeRadius = r.length();
+	//var relativeRadius = Math.sqrt((r.x^2)+(r.y^2)+(r.z^2));
 	var laplacian = 0;
 	if (relativeRadius < h && relativeRadius >= 0){
 		laplacian = 315/(64*Math.pi*h^9) * (24 * relativeRadius^2 * (h^2-relativeRadius^2-6) *(h^2-relativeRadius^2)^2);
@@ -437,7 +401,7 @@ window.onload = function() {
 	var gui = new DAT.GUI();
 	gui.add(parameters, 'dt', 1/30, 1).name('Step Size');
 	gui.add(parameters, 'mass',0.1, 100);
-	gui.add(parameters, 'kernelSize',0.1, 1);
+	gui.add(parameters, 'kernelSize',0.1, 2);
 	gui.add(parameters, 'bottomBound', parameters.bottomBound, 5);
 	//this one doesnt work:
 	gui.add(parameters, 'nmbrOfParticles', 10, 300).step(1).name('Number of particles');

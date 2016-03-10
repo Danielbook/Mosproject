@@ -13,7 +13,7 @@ for i=1:length(particles)
     particles(i).density = density;
 end
 for i=1:length(particles)
-    iPressure = (particles(i).density - parameters.restDensity) * parameters.gasConstantK;
+    iPressure = (particles(i).density - parameters.restDensity) * parameters.gasConstantK
     cs = 0;
     n = [0 0];
     laplacianCs = 0;
